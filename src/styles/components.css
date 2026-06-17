@@ -575,7 +575,7 @@
 
 @media (max-width: 768px) {
   .movie-card {
-    width: calc((100% - 8px) / 2.5);
+    width: calc((100% - 8px) / 2.15);
   }
 
   .movie-card__rank {
