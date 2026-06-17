@@ -72,11 +72,11 @@ export async function getMoviesByType(type, page = 1) {
  */
 export async function getMovieDetail(slug) {
   const data = await fetchJson(`${API_BASE}/phim/${slug}`);
-  const item = data.data?.item || data.item || {};
+  const item = data.data?.item || data.item || data.movie || {};
   return {
     ...item,
-    episodes: item.episodes || [],
-    cdnImage: data.data?.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live',
+    episodes: item.episodes || data.episodes || data.data?.episodes || [],
+    cdnImage: data.data?.APP_DOMAIN_CDN_IMAGE || data.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live',
   };
 }
 
