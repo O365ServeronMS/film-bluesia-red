@@ -642,8 +642,9 @@
   inset: 0;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.9) 0%,
-    transparent 60%
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.48) 38%,
+    transparent 68%
   );
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -658,16 +659,36 @@
 }
 
 .movie-card__title {
-  font-size: 13px;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 14px;
   font-weight: 700;
   color: #ffffff;
-  line-height: 1.3;
+  line-height: 1.2;
   margin-bottom: 4px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .movie-card__meta {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
   color: #b3b3b3;
+  white-space: nowrap;
+}
+
+.movie-card__imdb {
+  color: #f5c518;
+  font-weight: 700;
+}
+
+.movie-card__imdb-score {
+  color: #ffffff;
 }
 
 .movie-card__quality {
@@ -1215,19 +1236,20 @@
     background: linear-gradient(
       to top,
       rgba(0, 0, 0, 0.95) 0%,
-      rgba(0, 0, 0, 0.4) 40%,
-      transparent 100%
+      rgba(0, 0, 0, 0.5) 42%,
+      transparent 72%
     );
     padding: 8px;
   }
   
   .movie-card__title {
-    font-size: 11px;
+    font-size: 12px;
     margin-bottom: 2px;
   }
   
   .movie-card__meta {
-    font-size: 9px;
+    gap: 3px;
+    font-size: 10px;
   }
 }
 

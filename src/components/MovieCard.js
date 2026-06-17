@@ -4,6 +4,25 @@
 import { thumbUrl, posterUrl } from '../api/ophim.js';
 import { navigate } from '../router.js';
 
+function getImdbScore(movie) {
+  const rawScore =
+    movie.imdb?.vote_average ??
+    movie.imdb?.rating ??
+    movie.imdb?.score ??
+    movie.imdb;
+
+  if (rawScore === null || rawScore === undefined || rawScore === '') {
+    return '';
+  }
+
+  const score = Number(rawScore);
+  if (!Number.isFinite(score) || score <= 0) {
+    return '';
+  }
+
+  return score.toFixed(1);
+}
+
 /**
  * Render a single movie card into the given container.
  * @param {HTMLElement} container
@@ -73,12 +92,35 @@ export function renderMovieCard(container, movie, rank = null) {
   overlayName.textContent = movie.name;
   overlay.appendChild(overlayName);
 
+  const overlayMeta = document.createElement('div');
+  overlayMeta.className = 'movie-card__meta';
+
   if (movie.year) {
     const overlayYear = document.createElement('span');
-    overlayYear.className = 'movie-card__meta';
+    overlayYear.className = 'movie-card__year';
     overlayYear.textContent = movie.year;
-    overlay.appendChild(overlayYear);
+    overlayMeta.appendChild(overlayYear);
+
+    const separator = document.createElement('span');
+    separator.className = 'movie-card__meta-separator';
+    separator.textContent = '·';
+    overlayMeta.appendChild(separator);
   }
+
+  const imdb = document.createElement('span');
+  imdb.className = 'movie-card__imdb';
+  imdb.textContent = 'IMDb';
+  overlayMeta.appendChild(imdb);
+
+  const imdbScore = getImdbScore(movie);
+  if (imdbScore) {
+    const score = document.createElement('span');
+    score.className = 'movie-card__imdb-score';
+    score.textContent = imdbScore;
+    overlayMeta.appendChild(score);
+  }
+
+  overlay.appendChild(overlayMeta);
 
   card.appendChild(overlay);
 
