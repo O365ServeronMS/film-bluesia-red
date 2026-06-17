@@ -303,9 +303,16 @@ export function renderSearchOverlay(container) {
     }, DEBOUNCE_MS);
   }
 
+  function handleRouteChange() {
+    if (overlay.classList.contains('search-overlay--open')) {
+      close();
+    }
+  }
+
   // ---- Bind events ----
   document.addEventListener('open-search', handleOpenSearch);
   document.addEventListener('keydown', handleKeydown);
+  window.addEventListener('route-changed', handleRouteChange);
   closeBtn.addEventListener('click', close);
   input.addEventListener('input', handleInput);
 
@@ -313,6 +320,7 @@ export function renderSearchOverlay(container) {
   return function cleanup() {
     document.removeEventListener('open-search', handleOpenSearch);
     document.removeEventListener('keydown', handleKeydown);
+    window.removeEventListener('route-changed', handleRouteChange);
     closeBtn.removeEventListener('click', close);
     input.removeEventListener('input', handleInput);
     if (debounceTimer) clearTimeout(debounceTimer);
