@@ -45,7 +45,7 @@ export function renderPlayer(container, { embedUrl, m3u8Url, serverName, episode
   const playIcon = document.createElement('button');
   playIcon.className = 'player__play-btn';
   playIcon.setAttribute('aria-label', 'Phát video');
-  playIcon.innerHTML = `<svg viewBox="0 0 24 24" width="64" height="64" fill="currentColor"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.6)" stroke="#fff" stroke-width="1.5"/><path d="M10 8l6 4-6 4z" fill="#fff"/></svg>`;
+  playIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
   
   splash.appendChild(playIcon);
   playerContainer.appendChild(splash);

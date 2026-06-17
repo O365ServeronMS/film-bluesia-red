@@ -844,15 +844,43 @@
 
 .player__play-btn {
   position: relative;
-  background: none;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: rgba(229, 9, 20, 0.9);
   border: none;
   cursor: pointer;
   z-index: 11;
-  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.player__play-btn svg {
+  width: 36px;
+  height: 36px;
+  fill: #ffffff;
+  margin-left: 4px; /* visually center the triangle */
 }
 
 .player__splash:hover .player__play-btn {
-  transform: scale(1.1);
+  transform: scale(1.15);
+  background-color: #e50914;
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.4);
+}
+
+@media (max-width: 768px) {
+  .player__play-btn {
+    width: 60px;
+    height: 60px;
+  }
+  .player__play-btn svg {
+    width: 28px;
+    height: 28px;
+    margin-left: 3px;
+  }
 }
 
 .player__back {
