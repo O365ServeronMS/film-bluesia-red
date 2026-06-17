@@ -293,6 +293,43 @@
   width: 24px;
 }
 
+.hero__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 32px;
+  cursor: pointer;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s ease, background 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero:hover .hero__arrow {
+  opacity: 0.7;
+}
+
+.hero__arrow:hover {
+  opacity: 1 !important;
+}
+
+.hero__arrow--prev {
+  left: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.8), transparent);
+}
+
+.hero__arrow--next {
+  right: 0;
+  background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+}
+
 @media (max-width: 768px) {
   .hero {
     min-height: 65vh;

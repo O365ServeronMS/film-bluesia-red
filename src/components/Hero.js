@@ -133,6 +133,28 @@ export function renderHero(container, movies) {
 
   hero.appendChild(dots);
 
+  // ── Navigation Arrows ──
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'hero__arrow hero__arrow--prev';
+  prevBtn.innerHTML = '&#10094;'; // Left-pointing angle quotation mark
+  prevBtn.setAttribute('aria-label', 'Phim trước');
+  prevBtn.addEventListener('click', () => {
+    goToSlide((currentIndex - 1 + slides.length) % slides.length);
+    resetAutoRotate();
+  });
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'hero__arrow hero__arrow--next';
+  nextBtn.innerHTML = '&#10095;'; // Right-pointing angle quotation mark
+  nextBtn.setAttribute('aria-label', 'Phim tiếp theo');
+  nextBtn.addEventListener('click', () => {
+    nextSlide();
+    resetAutoRotate();
+  });
+
+  hero.appendChild(prevBtn);
+  hero.appendChild(nextBtn);
+
   // ── Slide transition logic ──
   function goToSlide(index) {
     // Deactivate current
