@@ -8,7 +8,7 @@ import { searchMovies } from '../api/ophim.js';
 import { renderMovieCard } from './MovieCard.js';
 
 const RECENT_SEARCHES_KEY = 'bluesia-recent-searches';
-const MAX_RECENT = 5;
+const MAX_RECENT = 8; // Increased slightly for pills layout
 const DEBOUNCE_MS = 400;
 
 // ---------------------------------------------------------------------------
@@ -31,6 +31,15 @@ function saveRecentSearch(keyword) {
   recent.unshift(trimmed);
   if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
   localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent));
+}
+
+function removeRecentSearch(keyword) {
+  const recent = getRecentSearches().filter((s) => s !== keyword);
+  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent));
+}
+
+function clearAllRecentSearches() {
+  localStorage.removeItem(RECENT_SEARCHES_KEY);
 }
 
 // ---------------------------------------------------------------------------
@@ -69,19 +78,29 @@ export function renderSearchOverlay(container) {
   const header = document.createElement('div');
   header.className = 'search-overlay__header';
 
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'search-overlay__close';
-  closeBtn.setAttribute('aria-label', 'Đóng tìm kiếm');
-  closeBtn.textContent = '✕';
+  const searchWrapper = document.createElement('div');
+  searchWrapper.className = 'search-overlay__input-wrapper';
+  
+  const searchIcon = document.createElement('div');
+  searchIcon.className = 'search-overlay__input-icon';
+  searchIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
 
   const input = document.createElement('input');
   input.className = 'search-overlay__input';
   input.type = 'text';
-  input.placeholder = 'Tìm kiếm phim...';
+  input.placeholder = 'Phim, đạo diễn, diễn viên...';
   input.autocomplete = 'off';
 
+  searchWrapper.appendChild(searchIcon);
+  searchWrapper.appendChild(input);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'search-overlay__close';
+  closeBtn.setAttribute('aria-label', 'Đóng tìm kiếm');
+  closeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+  header.appendChild(searchWrapper);
   header.appendChild(closeBtn);
-  header.appendChild(input);
 
   // ---- Content area (recent searches / results / empty) ----
   const content = document.createElement('div');
@@ -98,7 +117,19 @@ export function renderSearchOverlay(container) {
   // Empty state
   const emptyState = document.createElement('div');
   emptyState.className = 'search-overlay__empty';
-  emptyState.textContent = 'Không tìm thấy phim nào';
+  emptyState.innerHTML = `
+    <svg class="search-overlay__empty-icon" viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+      <line x1="7" y1="2" x2="7" y2="22"></line>
+      <line x1="17" y1="2" x2="17" y2="22"></line>
+      <line x1="2" y1="12" x2="22" y2="12"></line>
+      <line x1="2" y1="7" x2="7" y2="7"></line>
+      <line x1="2" y1="17" x2="7" y2="17"></line>
+      <line x1="17" y1="17" x2="22" y2="17"></line>
+      <line x1="17" y1="7" x2="22" y2="7"></line>
+    </svg>
+    <p>Không tìm thấy kết quả nào</p>
+  `;
 
   content.appendChild(recentSection);
   content.appendChild(resultsGrid);
@@ -145,10 +176,24 @@ export function renderSearchOverlay(container) {
     recentSection.innerHTML = '';
     recentSection.style.display = '';
 
+    const headingWrap = document.createElement('div');
+    headingWrap.className = 'search-overlay__recent-header';
+
     const heading = document.createElement('h3');
     heading.className = 'search-overlay__recent-title';
-    heading.textContent = 'Tìm kiếm gần đây';
-    recentSection.appendChild(heading);
+    heading.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Tìm kiếm gần đây`;
+    
+    const clearAllBtn = document.createElement('button');
+    clearAllBtn.className = 'search-overlay__recent-clear';
+    clearAllBtn.textContent = 'Xoá lịch sử';
+    clearAllBtn.addEventListener('click', () => {
+      clearAllRecentSearches();
+      showRecent();
+    });
+
+    headingWrap.appendChild(heading);
+    headingWrap.appendChild(clearAllBtn);
+    recentSection.appendChild(headingWrap);
 
     const list = document.createElement('ul');
     list.className = 'search-overlay__recent-list';
@@ -165,7 +210,18 @@ export function renderSearchOverlay(container) {
         performSearch(term);
       });
 
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'search-overlay__recent-remove';
+      removeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+      removeBtn.setAttribute('aria-label', 'Xoá từ khoá');
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeRecentSearch(term);
+        showRecent();
+      });
+
       li.appendChild(btn);
+      li.appendChild(removeBtn);
       list.appendChild(li);
     });
 
@@ -174,7 +230,7 @@ export function renderSearchOverlay(container) {
 
   function showSkeletons() {
     clearResults();
-    resultsGrid.appendChild(createSkeletonCards(8));
+    resultsGrid.appendChild(createSkeletonCards(10));
   }
 
   async function performSearch(keyword) {
@@ -199,21 +255,25 @@ export function renderSearchOverlay(container) {
       recentSection.style.display = 'none';
 
       if (!items || items.length === 0) {
-        emptyState.style.display = '';
+        emptyState.style.display = 'flex';
         return;
       }
 
       emptyState.style.display = 'none';
-      items.forEach((movie) => {
-        renderMovieCard(resultsGrid, movie);
+      items.forEach((movie, index) => {
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = 'search-overlay__result-item fade-up';
+        cardWrapper.style.animationDelay = `${Math.min(index * 0.05, 0.5)}s`;
+        renderMovieCard(cardWrapper, movie);
+        resultsGrid.appendChild(cardWrapper);
       });
 
       saveRecentSearch(keyword.trim());
     } catch (err) {
       if (err.name === 'AbortError') return;
       resultsGrid.innerHTML = '';
-      emptyState.textContent = 'Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại.';
-      emptyState.style.display = '';
+      emptyState.innerHTML = '<p>Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại.</p>';
+      emptyState.style.display = 'flex';
     }
   }
 
