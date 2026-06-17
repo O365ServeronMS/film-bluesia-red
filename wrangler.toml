@@ -1,0 +1,11 @@
+name = "phimmoi"
+compatibility_date = "2024-03-20"
+main = "worker.js"
+
+[assets]
+directory = "dist"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "MOVIES_KV"
+id = "10670a45ffa54b21bbb40cecc47ae1c5"
