@@ -851,7 +851,7 @@
 
 .category-grid__grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   padding: 0 4%;
 }
@@ -876,18 +876,43 @@
 
 @media (max-width: 1024px) {
   .category-grid__grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
 @media (max-width: 768px) {
+  .category-grid__header {
+    margin-bottom: 24px;
+  }
+  
   .category-grid__title {
     font-size: 24px;
   }
 
   .category-grid__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+  }
+  
+  /* Always show titles on mobile since there is no hover */
+  .movie-card__overlay {
+    opacity: 1;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.4) 40%,
+      transparent 100%
+    );
+    padding: 8px;
+  }
+  
+  .movie-card__title {
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  
+  .movie-card__meta {
+    font-size: 9px;
   }
 }
 

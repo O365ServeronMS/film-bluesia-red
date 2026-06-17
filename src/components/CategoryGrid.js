@@ -40,6 +40,10 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
   const wrapper = document.createElement('section');
   wrapper.className = 'category-grid';
 
+  // ---- Header (Breadcrumb + Title) ----
+  const header = document.createElement('div');
+  header.className = 'category-grid__header';
+
   // ---- Breadcrumb ----
   const breadcrumb = document.createElement('nav');
   breadcrumb.className = 'category-grid__breadcrumb';
@@ -65,13 +69,15 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
   current.textContent = title;
   breadcrumb.appendChild(current);
 
-  wrapper.appendChild(breadcrumb);
+  header.appendChild(breadcrumb);
 
   // ---- Title ----
   const heading = document.createElement('h1');
   heading.className = 'category-grid__title';
   heading.textContent = title;
-  wrapper.appendChild(heading);
+  header.appendChild(heading);
+
+  wrapper.appendChild(header);
 
   // ---- Cards grid ----
   const grid = document.createElement('div');
