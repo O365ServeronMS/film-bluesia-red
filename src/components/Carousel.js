@@ -37,7 +37,7 @@ export function renderCarousel(container, { title, items, seeAllLink, showRank }
 
   // ── Track wrapper (with arrows) ──
   const wrapper = document.createElement('div');
-  wrapper.className = 'carousel__wrapper';
+  wrapper.className = 'carousel__track-wrapper';
 
   // Left arrow
   const leftArrow = document.createElement('button');
