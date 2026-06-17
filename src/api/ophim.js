@@ -160,7 +160,7 @@ export function thumbUrl(path) {
 // --- Normalize list item ---
 // The v1/api endpoints return slightly different shapes; normalize them
 
-function normalizeListItem(item) {
+export function normalizeListItem(item) {
   return {
     _id: item._id,
     name: item.name,

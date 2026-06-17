@@ -13,6 +13,7 @@ import {
   getMoviesByGenre,
   getMoviesByCountry,
   searchMovies,
+  normalizeListItem
 } from './api/ophim.js';
 
 import { renderHeader } from './components/Header.js';
@@ -83,13 +84,16 @@ async function renderHomePage() {
   page.appendChild(skeleton);
 
   try {
-    // Fetch data in parallel
-    const [newMovies, phimLe, phimBo, hoatHinh] = await Promise.all([
-      getNewMovies(1),
-      getMoviesByType('phim-le', 1),
-      getMoviesByType('phim-bo', 1),
-      getMoviesByType('hoat-hinh', 1),
-    ]);
+    // Fetch data from our local SWR Edge Cache API
+    const res = await fetch('/api/home-data');
+    if (!res.ok) throw new Error('API Error: ' + res.status);
+    const data = await res.json();
+
+    const newMovies = { items: (data.newMovies?.items || []) };
+    // We normalize the items so they match what the UI expects
+    const phimLe = { items: (data.phimLe?.items || []).map(normalizeListItem) };
+    const phimBo = { items: (data.phimBo?.items || []).map(normalizeListItem) };
+    const hoatHinh = { items: (data.hoatHinh?.items || []).map(normalizeListItem) };
 
     // Clear skeleton
     page.innerHTML = '';
