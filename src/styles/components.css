@@ -942,7 +942,18 @@
   color: #ffffff;
 }
 
-.episodes__ep-btn--active {
+.episodes__ep-btn.episodes__ep-btn--active,
+.episodes__ep-btn[aria-pressed="true"] {
+  background: #e50914;
+  color: #ffffff;
+  border-color: #e50914;
+  font-weight: 700;
+}
+
+.episodes__ep-btn.episodes__ep-btn--active:hover,
+.episodes__ep-btn.episodes__ep-btn--active:focus-visible,
+.episodes__ep-btn[aria-pressed="true"]:hover,
+.episodes__ep-btn[aria-pressed="true"]:focus-visible {
   background: #e50914;
   color: #ffffff;
   border-color: #e50914;

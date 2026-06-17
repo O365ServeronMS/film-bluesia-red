@@ -350,8 +350,12 @@ export async function renderMovieDetail(container, slug) {
     const selectEpisode = (epBtn, ep, server, sIdx) => {
       episodeSection
         .querySelectorAll('.episodes__ep-btn--active')
-        .forEach((b) => b.classList.remove('episodes__ep-btn--active'));
+        .forEach((b) => {
+          b.classList.remove('episodes__ep-btn--active');
+          b.setAttribute('aria-pressed', 'false');
+        });
       epBtn.classList.add('episodes__ep-btn--active');
+      epBtn.setAttribute('aria-pressed', 'true');
 
       if (serverSelect.value !== String(sIdx)) {
         serverSelect.value = String(sIdx);
@@ -391,6 +395,7 @@ export async function renderMovieDetail(container, slug) {
         const epBtn = document.createElement('button');
         epBtn.className = 'episodes__ep-btn';
         epBtn.textContent = ep.name || 'Full';
+        epBtn.setAttribute('aria-pressed', 'false');
         epBtn.addEventListener('click', () => {
           selectEpisode(epBtn, ep, server, sIdx);
         });
