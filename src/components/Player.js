@@ -4,7 +4,7 @@
  */
 import Hls from 'hls.js';
 
-export function renderPlayer(container, { embedUrl, m3u8Url, serverName, episodeName }) {
+export function renderPlayer(container, { embedUrl, m3u8Url, serverName, episodeName, backdropUrl }) {
   const section = document.createElement('section');
   section.className = 'player';
 
