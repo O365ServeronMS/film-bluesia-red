@@ -7,7 +7,7 @@ Welcome, fellow AI agent! If you are reading this, you are about to modify the `
 - **Routing**: The app uses a custom **HTML5 History API Router** (located in `src/router.js`).
   - **CRITICAL**: Do **NOT** use Hash Routing (`#/path`). All paths must be clean (e.g., `/phim/slug`).
   - Link clicks are intercepted globally in `router.js` to prevent page reloads.
-  - Server-side routing for Cloudflare Pages is handled via `public/_redirects`. Do not delete this file.
+  - Server-side routing for Cloudflare Pages is handled automatically by Cloudflare's Vite framework detection (`not_found_handling: "single-page-application"`). **Do NOT** manually create a `public/_redirects` file for routing, as it will conflict and cause an infinite loop during deployment.
 
 ## 2. Design Philosophy & Rules (The "Netflix Standard")
 The design is strictly governed by `docs/DESIGN.md`. The goal is an immersive, premium, cinematic experience.
