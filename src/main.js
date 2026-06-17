@@ -94,8 +94,22 @@ async function renderHomePage() {
     // Clear skeleton
     page.innerHTML = '';
 
-    // Hero — use first items from new movies
-    const heroCleanup = renderHero(page, newMovies.items.slice(0, 5));
+    // Hero — Top 5 movies based on IMDB score and newest year
+    const uniqueMap = new Map();
+    [...newMovies.items, ...phimLe.items, ...phimBo.items, ...hoatHinh.items].forEach(m => {
+      if (m.poster_url && m.thumb_url) uniqueMap.set(m.slug, m); // Only consider items with images
+    });
+    const allItems = Array.from(uniqueMap.values());
+    
+    const topMovies = allItems.sort((a, b) => {
+      const scoreA = a.tmdb?.vote_average || 0;
+      const scoreB = b.tmdb?.vote_average || 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return (b.year || 0) - (a.year || 0);
+    });
+
+    const heroMovies = topMovies.slice(0, 5);
+    const heroCleanup = renderHero(page, heroMovies);
 
     // Carousels
     renderCarousel(page, {
