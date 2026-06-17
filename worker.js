@@ -45,11 +45,12 @@ async function handleHomeData(request, env, ctx) {
 
     const fetchFreshData = async () => {
       try {
-        const [newRes, leRes, boRes, hhRes] = await Promise.all([
+        const [newRes, leRes, boRes, hhRes, amRes] = await Promise.all([
           fetch('https://ophim1.com/danh-sach/phim-moi-cap-nhat?page=1').then(r => r.json()),
           fetch('https://ophim1.com/v1/api/danh-sach/phim-le?page=1').then(r => r.json()),
           fetch('https://ophim1.com/v1/api/danh-sach/phim-bo?page=1').then(r => r.json()),
           fetch('https://ophim1.com/v1/api/danh-sach/hoat-hinh?page=1').then(r => r.json()),
+          fetch('https://ophim1.com/v1/api/quoc-gia/au-my?page=1').then(r => r.json()),
         ]);
 
         const freshData = {
@@ -62,6 +63,7 @@ async function handleHomeData(request, env, ctx) {
           phimLe: { items: (leRes.data?.items || leRes.items || []) },
           phimBo: { items: (boRes.data?.items || boRes.items || []) },
           hoatHinh: { items: (hhRes.data?.items || hhRes.items || []) },
+          auMy: { items: (amRes.data?.items || amRes.items || []) },
         };
 
         if (KV) {

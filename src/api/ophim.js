@@ -178,6 +178,7 @@ export function normalizeListItem(item) {
     category: item.category || [],
     country: item.country || [],
     tmdb: item.tmdb || {},
+    imdb: item.imdb || {},
     modified: item.modified || {},
   };
 }

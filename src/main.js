@@ -94,20 +94,32 @@ async function renderHomePage() {
     const phimLe = { items: (data.phimLe?.items || []).map(normalizeListItem) };
     const phimBo = { items: (data.phimBo?.items || []).map(normalizeListItem) };
     const hoatHinh = { items: (data.hoatHinh?.items || []).map(normalizeListItem) };
+    const auMy = { items: (data.auMy?.items || []).map(normalizeListItem) };
 
     // Clear skeleton
     page.innerHTML = '';
 
-    // Hero — Top 5 movies based on IMDB score and newest year
+    // Hero — Top 5 Phim Lẻ Âu Mỹ based on IMDB score and newest year
     const uniqueMap = new Map();
-    [...newMovies.items, ...phimLe.items, ...phimBo.items, ...hoatHinh.items].forEach(m => {
-      if (m.poster_url && m.thumb_url) uniqueMap.set(m.slug, m); // Only consider items with images
+    auMy.items.forEach(m => {
+      // Only consider single movies (Phim Lẻ) with images
+      if (m.type === 'single' && m.poster_url && m.thumb_url) {
+        uniqueMap.set(m.slug, m);
+      }
     });
+
+    // Fallback if not enough Phim Lẻ Âu Mỹ are found
+    if (uniqueMap.size < 5) {
+      phimLe.items.forEach(m => {
+        if (m.poster_url && m.thumb_url) uniqueMap.set(m.slug, m);
+      });
+    }
+
     const allItems = Array.from(uniqueMap.values());
     
     const topMovies = allItems.sort((a, b) => {
-      const scoreA = a.tmdb?.vote_average || 0;
-      const scoreB = b.tmdb?.vote_average || 0;
+      const scoreA = a.imdb?.vote_average || a.tmdb?.vote_average || 0;
+      const scoreB = b.imdb?.vote_average || b.tmdb?.vote_average || 0;
       if (scoreB !== scoreA) return scoreB - scoreA;
       return (b.year || 0) - (a.year || 0);
     });
