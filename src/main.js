@@ -76,33 +76,6 @@ const app = document.getElementById('app');
 let headerCleanup = null;
 let searchCleanup = null;
 
-function getImdbScore(movie) {
-  const rawScore =
-    movie.imdb?.vote_average ??
-    movie.imdb?.rating ??
-    movie.imdb?.score ??
-    movie.imdb;
-
-  const score = Number(rawScore);
-  return Number.isFinite(score) && score > 0 ? score : 0;
-}
-
-function isAuMyMovie(movie) {
-  return (movie.country || []).some((country) => {
-    const slug = String(country.slug || '').toLowerCase();
-    const name = String(country.name || '').toLowerCase();
-    return slug === 'au-my' || name.includes('âu mỹ') || name.includes('au my');
-  });
-}
-
-function isHeroCandidate(movie, fromAuMyEndpoint = false) {
-  return (
-    movie.type === 'single' &&
-    Boolean(movie.poster_url && movie.thumb_url) &&
-    getImdbScore(movie) > 0 &&
-    (fromAuMyEndpoint || isAuMyMovie(movie))
-  );
-}
 
 function mountGlobalUI() {
   // Header
@@ -166,38 +139,13 @@ async function renderHomePage() {
     const phimLe = { items: (data.phimLe?.items || []).map(normalizeListItem) };
     const phimBo = { items: (data.phimBo?.items || []).map(normalizeListItem) };
     const hoatHinh = { items: (data.hoatHinh?.items || []).map(normalizeListItem) };
-    const auMy = { items: (data.auMy?.items || []).map(normalizeListItem) };
+    const heroMovies = { items: (data.heroMovies || []).map(normalizeListItem) };
 
     // Clear skeleton
     page.innerHTML = '';
 
-    // Hero — Top 5 Phim Lẻ Âu Mỹ based on IMDB score and newest year
-    const uniqueMap = new Map();
-    auMy.items.forEach(m => {
-      // Only consider single movies (Phim Lẻ) with images
-      if (isHeroCandidate(m, true)) {
-        uniqueMap.set(m.slug, m);
-      }
-    });
 
-    // Fallback if not enough Phim Lẻ Âu Mỹ are found
-    if (uniqueMap.size < 5) {
-      phimLe.items.forEach(m => {
-        if (isHeroCandidate(m)) uniqueMap.set(m.slug, m);
-      });
-    }
-
-    const allItems = Array.from(uniqueMap.values());
-    
-    const topMovies = allItems.sort((a, b) => {
-      const scoreA = getImdbScore(a);
-      const scoreB = getImdbScore(b);
-      if (scoreB !== scoreA) return scoreB - scoreA;
-      return (b.year || 0) - (a.year || 0);
-    });
-
-    const heroMovies = topMovies.slice(0, 5);
-    const heroCleanup = renderHero(page, heroMovies);
+    const heroCleanup = renderHero(page, heroMovies.items);
 
     // Carousels
     renderCarousel(page, {
