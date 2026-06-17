@@ -83,11 +83,17 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
   const grid = document.createElement('div');
   grid.className = 'category-grid__grid';
 
-  // ---- Load More button ----
-  const loadMoreBtn = document.createElement('button');
-  loadMoreBtn.className = 'category-grid__load-more';
-  loadMoreBtn.textContent = 'Tải thêm';
-  loadMoreBtn.style.display = 'none';
+  // ---- Sentinel for Infinite Scroll ----
+  const sentinel = document.createElement('div');
+  sentinel.className = 'category-grid__sentinel';
+  sentinel.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinner"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>`;
+  sentinel.style.display = 'none';
+
+  // ---- End Message ----
+  const endMessage = document.createElement('div');
+  endMessage.className = 'category-grid__end-message';
+  endMessage.textContent = 'Bạn đã khám phá hết danh mục này.';
+  endMessage.style.display = 'none';
 
   // ---- Error message ----
   const errorEl = document.createElement('div');
@@ -99,7 +105,8 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
   wrapper.appendChild(skeleton);
 
   wrapper.appendChild(grid);
-  wrapper.appendChild(loadMoreBtn);
+  wrapper.appendChild(sentinel);
+  wrapper.appendChild(endMessage);
   wrapper.appendChild(errorEl);
   container.appendChild(wrapper);
 
@@ -108,17 +115,21 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
   let totalPages = 1;
   let isLoading = false;
 
+  // ---- Intersection Observer ----
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !isLoading && currentPage < totalPages) {
+      loadPage();
+    }
+  }, { rootMargin: '300px' });
+
   // ---- Fetch & render a page ----
   async function loadPage() {
     if (isLoading) return;
     isLoading = true;
     currentPage++;
 
-    // Show inline skeleton for subsequent pages
-    let inlineSkeleton = null;
     if (currentPage > 1) {
-      loadMoreBtn.disabled = true;
-      loadMoreBtn.textContent = 'Đang tải...';
+      sentinel.style.display = 'flex';
     }
 
     try {
@@ -127,8 +138,12 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
       // Remove initial skeleton on first successful load
       if (skeleton.parentNode) skeleton.remove();
 
-      // Determine total pages from pagination
-      totalPages = pagination.totalPages || pagination.totalPage || 1;
+      // Determine total pages from pagination accurately
+      if (pagination.totalItems && pagination.totalItemsPerPage) {
+        totalPages = Math.ceil(pagination.totalItems / pagination.totalItemsPerPage);
+      } else {
+        totalPages = pagination.totalPages || pagination.totalPage || 1;
+      }
 
       if (!items || items.length === 0) {
         if (currentPage === 1) {
@@ -136,37 +151,36 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
           errorEl.style.display = '';
         }
       } else {
-        items.forEach((movie) => {
+        items.forEach((movie, index) => {
           renderMovieCard(grid, movie);
+          const card = grid.lastElementChild;
+          if (card) {
+            card.classList.add('fade-up');
+            card.style.animationDelay = `${Math.min(index * 0.05, 0.5)}s`;
+          }
         });
       }
 
-      // Show / hide Load More
-      if (currentPage < totalPages) {
-        loadMoreBtn.style.display = '';
-        loadMoreBtn.disabled = false;
-        loadMoreBtn.textContent = 'Tải thêm';
-      } else {
-        loadMoreBtn.style.display = 'none';
+      sentinel.style.display = 'none';
+
+      // Check if end reached
+      if (currentPage >= totalPages && items && items.length > 0) {
+        endMessage.style.display = 'block';
+        observer.unobserve(sentinel);
       }
     } catch (err) {
-      // Remove skeleton on error too
       if (skeleton.parentNode) skeleton.remove();
 
       errorEl.textContent = 'Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.';
       errorEl.style.display = '';
-
-      loadMoreBtn.disabled = false;
-      loadMoreBtn.textContent = 'Tải thêm';
-      // Roll back page so user can retry
+      sentinel.style.display = 'none';
       currentPage--;
     } finally {
       isLoading = false;
     }
   }
 
-  // ---- Load More handler ----
-  loadMoreBtn.addEventListener('click', loadPage);
+  observer.observe(sentinel);
 
   // ---- Initial load ----
   await loadPage();
