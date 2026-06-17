@@ -22,7 +22,7 @@ export function initRouter(routeDefs) {
       })
       .replace(/\//g, '\\/');
     return {
-      regex: new RegExp(`^${regexStr}$`),
+      regex: new RegExp(`^${regexStr}\\/?$`),
       paramNames,
       handler,
     };
