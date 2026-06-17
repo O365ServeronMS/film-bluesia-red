@@ -25,6 +25,32 @@ import { renderCategoryGrid } from './components/CategoryGrid.js';
 import { renderSearchOverlay } from './components/SearchOverlay.js';
 import { createSkeletonCards, createSkeletonHero } from './components/Skeleton.js';
 
+function showRuntimeError(message) {
+  const errorEl = document.createElement('div');
+  errorEl.style.cssText = [
+    'position:fixed',
+    'left:0',
+    'right:0',
+    'top:64px',
+    'z-index:9999',
+    'padding:16px 20px',
+    'background:#220',
+    'color:#ff5a5a',
+    'font:14px/1.4 monospace',
+    'white-space:pre-wrap',
+  ].join(';');
+  errorEl.textContent = message;
+  document.body.appendChild(errorEl);
+}
+
+window.addEventListener('error', (event) => {
+  showRuntimeError(`${event.message} - ${event.filename}:${event.lineno}`);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  showRuntimeError(`Promise: ${event.reason?.stack || event.reason}`);
+});
+
 // ─── App Root ──────────────────────────────────────────
 const app = document.getElementById('app');
 
@@ -131,26 +157,26 @@ async function renderHomePage() {
     renderCarousel(page, {
       title: 'Phim Mới Cập Nhật',
       items: newMovies.items,
-      seeAllLink: '#/danh-sach/phim-moi-cap-nhat',
+      seeAllLink: '/danh-sach/phim-moi-cap-nhat',
       showRank: true,
     });
 
     renderCarousel(page, {
       title: 'Phim Lẻ',
       items: phimLe.items,
-      seeAllLink: '#/danh-sach/phim-le',
+      seeAllLink: '/danh-sach/phim-le',
     });
 
     renderCarousel(page, {
       title: 'Phim Bộ',
       items: phimBo.items,
-      seeAllLink: '#/danh-sach/phim-bo',
+      seeAllLink: '/danh-sach/phim-bo',
     });
 
     renderCarousel(page, {
       title: 'Hoạt Hình',
       items: hoatHinh.items,
-      seeAllLink: '#/danh-sach/hoat-hinh',
+      seeAllLink: '/danh-sach/hoat-hinh',
     });
 
     // Footer

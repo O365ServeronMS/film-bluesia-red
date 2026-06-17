@@ -22,6 +22,7 @@ export function initRouter(routeDefs) {
       })
       .replace(/\//g, '\\/');
     return {
+      path,
       regex: new RegExp(`^${regexStr}\\/?$`),
       paramNames,
       handler,
@@ -35,8 +36,8 @@ export function initRouter(routeDefs) {
     const link = e.target.closest('a');
     if (link) {
       const href = link.getAttribute('href');
-      // If the link is an internal link (e.g. starts with / or #/)
-      if (href && (href.startsWith('/') || href.startsWith('#/'))) {
+      // If the link is an internal clean path
+      if (href && href.startsWith('/')) {
         e.preventDefault();
         navigate(href);
       }
@@ -48,16 +49,9 @@ export function initRouter(routeDefs) {
 
 /**
  * Navigate to a route programmatically
- * @param {string} path - e.g. '/phim/toy-story-5' or '#/phim/toy-story-5'
+ * @param {string} path - e.g. '/phim/toy-story-5'
  */
 export function navigate(path) {
-  // Normalize legacy hash paths
-  if (path.startsWith('#/')) {
-    path = path.slice(1);
-  } else if (path === '#') {
-    path = '/';
-  }
-  
   history.pushState(null, '', path);
   handleRoute();
 }
@@ -88,8 +82,7 @@ function handleRoute() {
     // Exact match for root or static paths
     if (route.path === path || route.path === path.replace(/\/$/, '')) {
       window.scrollTo(0, 0);
-      const cleanup = route.handler({ params: {}, query });
-      if (typeof cleanup === 'function') currentCleanup = cleanup;
+      runHandler(route.handler, { params: {}, query });
       return;
     }
 
@@ -103,8 +96,7 @@ function handleRoute() {
           params[route.paramNames[0]] = decodeURIComponent(slug);
           
           window.scrollTo(0, 0);
-          const cleanup = route.handler({ params, query });
-          if (typeof cleanup === 'function') currentCleanup = cleanup;
+          runHandler(route.handler, { params, query });
           return;
         }
       }
@@ -121,4 +113,23 @@ function handleRoute() {
       <a href="/" style="color: #e50914; text-decoration: underline; margin-top: 20px; display: inline-block;">Quay về trang chủ</a>
     </div>
   `;
+}
+
+function runHandler(handler, routeContext) {
+  const cleanup = handler(routeContext);
+
+  if (cleanup && typeof cleanup.then === 'function') {
+    cleanup
+      .then((resolvedCleanup) => {
+        if (typeof resolvedCleanup === 'function') currentCleanup = resolvedCleanup;
+      })
+      .catch((err) => {
+        setTimeout(() => {
+          throw err;
+        });
+      });
+    return;
+  }
+
+  if (typeof cleanup === 'function') currentCleanup = cleanup;
 }

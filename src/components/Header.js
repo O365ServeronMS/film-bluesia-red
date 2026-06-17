@@ -141,29 +141,11 @@ export function renderHeader(container) {
   // Apply initial state
   onScroll();
 
-  // ── Update active link on hash change ──
-  function onHashChange() {
-    const hash = window.location.hash || '#/';
-
-    nav.querySelectorAll('.header__nav-link').forEach((a) => {
-      a.classList.toggle('header__nav-link--active', a.getAttribute('href') === hash);
-    });
-
-    mobileMenu.querySelectorAll('.header__mobile-link').forEach((a) => {
-      a.classList.toggle('header__mobile-link--active', a.getAttribute('href') === hash);
-    });
-
-    // Close mobile menu on navigation
-    mobileMenu.classList.remove('header__mobile-menu--open');
-  }
-
-  window.addEventListener('hashchange', onHashChange);
-
   container.appendChild(header);
 
   // Cleanup
   return function cleanup() {
     window.removeEventListener('scroll', onScroll);
-    window.removeEventListener('hashchange', onHashChange);
+    window.removeEventListener('route-changed', updateActiveLinks);
   };
 }
