@@ -1,0 +1,33 @@
+# AI Agent Guidelines for Film Bluesia Red
+
+Welcome, fellow AI agent! If you are reading this, you are about to modify the `film-bluesia-red` codebase. Before you write a single line of code, **read this entire document**. It contains critical context and architectural rules to ensure you don't accidentally revert hard-won improvements or break the premium design system.
+
+## 1. Core Architecture
+- **Tech Stack**: Vanilla JavaScript (ESModules), plain CSS, and Vite as the bundler. **No React, Vue, or Tailwind.** Keep dependencies minimal.
+- **Routing**: The app uses a custom **HTML5 History API Router** (located in `src/router.js`).
+  - **CRITICAL**: Do **NOT** use Hash Routing (`#/path`). All paths must be clean (e.g., `/phim/slug`).
+  - Link clicks are intercepted globally in `router.js` to prevent page reloads.
+  - Server-side routing for Cloudflare Pages is handled via `public/_redirects`. Do not delete this file.
+
+## 2. Design Philosophy & Rules (The "Netflix Standard")
+The design is strictly governed by `docs/DESIGN.md`. The goal is an immersive, premium, cinematic experience.
+- **Colors**: True black (`#000000`) or deep grey (`#111111`) backgrounds only. Vibrant red (`#e50914`) for primary accents.
+- **Movie Cards (`MovieCard.js`)**: Follow the "Infinite Digital Shelf" concept. Cards must only show the poster image. **Do not** add plain text underneath the cards (e.g., "HD", "Tập Full"). Meta information should only appear as absolutely positioned overlays (e.g., on hover).
+- **Cinematic Layout (`Hero.js` & `MovieDetail.js`)**: The top of the home page and individual movie detail pages must feature a full-bleed, edge-to-edge backdrop image that fades smoothly into the black background via a CSS gradient. Information (Title, Year, Buttons) floats on the left side over the gradient. Do not revert to a split-column (poster next to text) layout for the top section.
+- **Icons**: Use crisp, modern SVG icons for buttons (e.g., Play, Info) instead of text-based symbols (like `▶` or `i`).
+
+## 3. Logo Management
+There are two separate logos used for specific visual reasons. Do not merge them:
+- **`public/logo-dark.png`**: A logo with a pure black (`#000000`) background. This is used in `src/components/Header.js` so it melts seamlessly into the dark navigation bar.
+- **`public/logo.png`**: A logo with a white/light background. This is used exclusively as the favicon in `index.html` to guarantee visibility on light-themed browser tabs.
+
+## 4. API Handling (`src/api/ophim.js`)
+- The app fetches data from the OPhim API (`https://ophim1.com/`).
+- **Data Structure Quirks**: The API payload structure can be inconsistent between different endpoints (e.g., `data.item` vs `data.movie` vs `data.data.item`). The parsers in `ophim.js` (like `getMovieDetail`) handle these fallbacks. If an API call fails to render data, check the JSON structure first before modifying components.
+
+## 5. CSS Architecture (`src/styles/components.css`)
+- Use BEM-like naming conventions (e.g., `hero`, `hero__title`, `hero__btn--primary`).
+- Ensure all hover states scale smoothly (`transform: scale()`, `transition: ...`).
+- Keep border radiuses minimal (`4px` or `8px`) for a sharper, more mature aesthetic.
+
+By adhering strictly to these guidelines, you will preserve the structural integrity and premium feel of the application. Good luck!
