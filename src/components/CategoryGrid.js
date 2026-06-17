@@ -36,7 +36,7 @@ function createSkeletonGrid(count = 10) {
 // Component
 // ---------------------------------------------------------------------------
 
-export async function renderCategoryGrid(container, { type, fetchFn, title }) {
+export async function renderCategoryGrid(container, { type, fetchFn, title, currentPage = 1 }) {
   const wrapper = document.createElement('section');
   wrapper.className = 'category-grid';
 
@@ -64,10 +64,10 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
   sep.textContent = '›';
   breadcrumb.appendChild(sep);
 
-  const current = document.createElement('span');
-  current.className = 'category-grid__breadcrumb-current';
-  current.textContent = title;
-  breadcrumb.appendChild(current);
+  const currentCrumb = document.createElement('span');
+  currentCrumb.className = 'category-grid__breadcrumb-current';
+  currentCrumb.textContent = title;
+  breadcrumb.appendChild(currentCrumb);
 
   header.appendChild(breadcrumb);
 
@@ -83,17 +83,10 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
   const grid = document.createElement('div');
   grid.className = 'category-grid__grid';
 
-  // ---- Sentinel for Infinite Scroll ----
-  const sentinel = document.createElement('div');
-  sentinel.className = 'category-grid__sentinel';
-  sentinel.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinner"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>`;
-  sentinel.style.display = 'none';
-
-  // ---- End Message ----
-  const endMessage = document.createElement('div');
-  endMessage.className = 'category-grid__end-message';
-  endMessage.textContent = 'Bạn đã khám phá hết danh mục này.';
-  endMessage.style.display = 'none';
+  // ---- Pagination Container ----
+  const paginationContainer = document.createElement('div');
+  paginationContainer.className = 'category-grid__pagination pagination';
+  paginationContainer.style.display = 'none';
 
   // ---- Error message ----
   const errorEl = document.createElement('div');
@@ -105,83 +98,103 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
   wrapper.appendChild(skeleton);
 
   wrapper.appendChild(grid);
-  wrapper.appendChild(sentinel);
-  wrapper.appendChild(endMessage);
+  wrapper.appendChild(paginationContainer);
   wrapper.appendChild(errorEl);
   container.appendChild(wrapper);
 
-  // ---- Pagination state ----
-  let currentPage = 0;
-  let totalPages = 1;
-  let isLoading = false;
+  function renderPagination(current, total) {
+    paginationContainer.innerHTML = '';
+    if (total <= 1) return;
+    
+    paginationContainer.style.display = 'flex';
 
-  // ---- Intersection Observer ----
-  const observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && !isLoading && currentPage < totalPages) {
-      loadPage();
+    const createBtn = (text, targetPage, isActive = false) => {
+      const btn = document.createElement('button');
+      btn.className = `pagination__btn ${isActive ? 'pagination__btn--active' : ''}`;
+      btn.textContent = text;
+      if (isActive) btn.disabled = true;
+      btn.addEventListener('click', () => {
+        const path = window.location.pathname;
+        navigate(`${path}?page=${targetPage}`);
+      });
+      return btn;
+    };
+
+    if (current > 1) {
+      paginationContainer.appendChild(createBtn('‹', current - 1));
     }
-  }, { rootMargin: '300px' });
 
-  // ---- Fetch & render a page ----
-  async function loadPage() {
-    if (isLoading) return;
-    isLoading = true;
-    currentPage++;
+    const maxPagesToShow = 5;
+    let startPage = Math.max(1, current - 2);
+    let endPage = Math.min(total, current + 2);
 
-    if (currentPage > 1) {
-      sentinel.style.display = 'flex';
+    if (current <= 2) {
+      endPage = Math.min(total, maxPagesToShow);
+    }
+    if (current >= total - 1) {
+      startPage = Math.max(1, total - maxPagesToShow + 1);
     }
 
-    try {
-      const { items, pagination } = await fetchFn(currentPage);
-
-      // Remove initial skeleton on first successful load
-      if (skeleton.parentNode) skeleton.remove();
-
-      // Determine total pages from pagination accurately
-      if (pagination.totalItems && pagination.totalItemsPerPage) {
-        totalPages = Math.ceil(pagination.totalItems / pagination.totalItemsPerPage);
-      } else {
-        totalPages = pagination.totalPages || pagination.totalPage || 1;
+    if (startPage > 1) {
+      paginationContainer.appendChild(createBtn('1', 1));
+      if (startPage > 2) {
+        const dots = document.createElement('span');
+        dots.className = 'pagination__dots';
+        dots.textContent = '...';
+        paginationContainer.appendChild(dots);
       }
+    }
 
-      if (!items || items.length === 0) {
-        if (currentPage === 1) {
-          errorEl.textContent = 'Không có phim nào trong danh mục này.';
-          errorEl.style.display = '';
-        }
-      } else {
-        items.forEach((movie, index) => {
-          renderMovieCard(grid, movie);
-          const card = grid.lastElementChild;
-          if (card) {
-            card.classList.add('fade-up');
-            card.style.animationDelay = `${Math.min(index * 0.05, 0.5)}s`;
-          }
-        });
+    for (let i = startPage; i <= endPage; i++) {
+      paginationContainer.appendChild(createBtn(i.toString(), i, i === current));
+    }
+
+    if (endPage < total) {
+      if (endPage < total - 1) {
+        const dots = document.createElement('span');
+        dots.className = 'pagination__dots';
+        dots.textContent = '...';
+        paginationContainer.appendChild(dots);
       }
+      paginationContainer.appendChild(createBtn(total.toString(), total));
+    }
 
-      sentinel.style.display = 'none';
-
-      // Check if end reached
-      if (currentPage >= totalPages && items && items.length > 0) {
-        endMessage.style.display = 'block';
-        observer.unobserve(sentinel);
-      }
-    } catch (err) {
-      if (skeleton.parentNode) skeleton.remove();
-
-      errorEl.textContent = 'Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.';
-      errorEl.style.display = '';
-      sentinel.style.display = 'none';
-      currentPage--;
-    } finally {
-      isLoading = false;
+    if (current < total) {
+      paginationContainer.appendChild(createBtn('›', current + 1));
     }
   }
 
-  observer.observe(sentinel);
+  // ---- Fetch & render ----
+  try {
+    const { items, pagination } = await fetchFn(currentPage);
 
-  // ---- Initial load ----
-  await loadPage();
+    if (skeleton.parentNode) skeleton.remove();
+
+    let totalPages = 1;
+    if (pagination.totalItems && pagination.totalItemsPerPage) {
+      totalPages = Math.ceil(pagination.totalItems / pagination.totalItemsPerPage);
+    } else {
+      totalPages = pagination.totalPages || pagination.totalPage || 1;
+    }
+
+    if (!items || items.length === 0) {
+      errorEl.textContent = 'Không có phim nào trong trang này.';
+      errorEl.style.display = '';
+    } else {
+      items.forEach((movie, index) => {
+        renderMovieCard(grid, movie);
+        const card = grid.lastElementChild;
+        if (card) {
+          card.classList.add('fade-up');
+          card.style.animationDelay = `${Math.min(index * 0.03, 0.3)}s`;
+        }
+      });
+      renderPagination(currentPage, totalPages);
+    }
+  } catch (err) {
+    if (skeleton.parentNode) skeleton.remove();
+    errorEl.textContent = 'Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.';
+    errorEl.style.display = '';
+  }
 }
+

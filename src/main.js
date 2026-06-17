@@ -210,9 +210,10 @@ function renderDetailPage({ params }) {
 }
 
 // ─── Category / List Page ───────────────────────────────
-function renderListPage({ params }) {
+function renderListPage({ params, query }) {
   const page = getPageContainer();
   const type = params.type;
+  const currentPage = query.page ? parseInt(query.page, 10) : 1;
 
   const typeNames = {
     'phim-le': 'Phim Lẻ',
@@ -227,12 +228,14 @@ function renderListPage({ params }) {
       type: 'danh-sach',
       fetchFn: (p) => getNewMovies(p),
       title: typeNames[type] || type,
+      currentPage,
     });
   } else {
     renderCategoryGrid(page, {
       type: 'danh-sach',
       fetchFn: (p) => getMoviesByType(type, p),
       title: typeNames[type] || type,
+      currentPage,
     });
   }
 
@@ -240,23 +243,27 @@ function renderListPage({ params }) {
 }
 
 // ─── Genre Page ─────────────────────────────────────────
-function renderGenrePage({ params }) {
+function renderGenrePage({ params, query }) {
   const page = getPageContainer();
+  const currentPage = query.page ? parseInt(query.page, 10) : 1;
   renderCategoryGrid(page, {
     type: 'the-loai',
     fetchFn: (p) => getMoviesByGenre(params.slug, p),
     title: params.slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    currentPage,
   });
   renderFooter(page);
 }
 
 // ─── Country Page ───────────────────────────────────────
-function renderCountryPage({ params }) {
+function renderCountryPage({ params, query }) {
   const page = getPageContainer();
+  const currentPage = query.page ? parseInt(query.page, 10) : 1;
   renderCategoryGrid(page, {
     type: 'quoc-gia',
     fetchFn: (p) => getMoviesByCountry(params.slug, p),
     title: params.slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    currentPage,
   });
   renderFooter(page);
 }
