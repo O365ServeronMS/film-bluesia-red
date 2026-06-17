@@ -246,7 +246,7 @@
   overflow: hidden;
 }
 
-.hero__actions {
+.hero__buttons {
   display: flex;
   gap: 12px;
 }
@@ -734,11 +734,17 @@
   margin-top: 0;
 }
 
+.detail__episodes {
+  margin-top: -68px;
+  position: relative;
+  z-index: 3;
+}
+
 .episodes__header {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top: 32px;
+  margin-top: 0;
   margin-bottom: 20px;
 }
 
@@ -767,6 +773,10 @@
 
 .episodes__server-select:hover {
   opacity: 0.9;
+}
+
+.episodes__list {
+  margin-top: 20px;
 }
 
 .episodes__grid {
@@ -800,6 +810,16 @@
 }
 
 @media (max-width: 768px) {
+  .detail__episodes {
+    margin-top: -36px;
+  }
+
+  .episodes__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
   .episodes__grid {
     grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
     gap: 10px;

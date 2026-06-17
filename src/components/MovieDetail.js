@@ -7,6 +7,32 @@ import { getMovieDetail, posterUrl, thumbUrl } from '../api/ophim.js';
 import { navigate } from '../router.js';
 import { renderPlayer } from './Player.js';
 
+function getEpisodeRank(ep) {
+  const name = String(ep?.name || '').trim().toLowerCase();
+  const slug = String(ep?.slug || '').trim().toLowerCase();
+  const filename = String(ep?.filename || '').trim().toLowerCase();
+  const haystack = `${name} ${slug} ${filename}`;
+
+  if (/\bfull\b|full|tap-full|tập full/.test(haystack)) return 0;
+  if (/(^|\D)1($|\D)|tap-1|tập 1|episode 1|ep 1/.test(haystack)) return 1;
+  return 2;
+}
+
+function isSingleMovie(movie) {
+  const type = String(movie?.type || '').toLowerCase();
+  return type === 'single' || type === 'phim-le';
+}
+
+function findPreferredEpisodeButton(movie, episodeButtons) {
+  if (episodeButtons.length === 0) return null;
+
+  const targetRank = isSingleMovie(movie) ? 0 : 1;
+  return (
+    episodeButtons.find(({ ep }) => getEpisodeRank(ep) === targetRank)?.button ||
+    episodeButtons[0].button
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Skeleton placeholder while loading
 // ---------------------------------------------------------------------------
@@ -177,8 +203,15 @@ export async function renderMovieDetail(container, slug) {
   const playBtn = document.createElement('button');
   playBtn.className = 'hero__btn hero__btn--primary';
   playBtn.innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 4l15 8-15 8z"></path></svg><span>Xem Phim</span>`;
+  let preferredEpisodeButton = null;
+
   playBtn.addEventListener('click', () => {
-    episodeSection.scrollIntoView({ behavior: 'smooth' });
+    if (preferredEpisodeButton) {
+      preferredEpisodeButton.click();
+      return;
+    }
+
+    episodeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   btnGroup.appendChild(playBtn);
 
@@ -323,6 +356,33 @@ export async function renderMovieDetail(container, slug) {
     const gridsContainer = document.createElement('div');
     gridsContainer.className = 'episodes';
 
+    const episodeButtons = [];
+
+    const selectEpisode = (epBtn, ep, server, sIdx) => {
+      episodeSection
+        .querySelectorAll('.episodes__ep-btn--active')
+        .forEach((b) => b.classList.remove('episodes__ep-btn--active'));
+      epBtn.classList.add('episodes__ep-btn--active');
+
+      if (serverSelect.value !== String(sIdx)) {
+        serverSelect.value = String(sIdx);
+        gridsContainer.querySelectorAll('.episodes__grid').forEach((g) => {
+          g.style.display = g.dataset.serverIndex === String(sIdx) ? '' : 'none';
+        });
+      }
+
+      playerMount.innerHTML = '';
+      renderPlayer(playerMount, {
+        embedUrl: ep.link_embed || '',
+        m3u8Url: ep.link_m3u8 || '',
+        serverName: server.server_name || `Server ${sIdx + 1}`,
+        episodeName: ep.name || 'Full',
+        backdropUrl: posterUrl(movie.poster_url)
+      });
+
+      playerMount.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
     movie.episodes.forEach((server, sIdx) => {
       if (!Array.isArray(server.server_data) || server.server_data.length === 0) return;
 
@@ -343,25 +403,10 @@ export async function renderMovieDetail(container, slug) {
         epBtn.className = 'episodes__ep-btn';
         epBtn.textContent = ep.name || 'Full';
         epBtn.addEventListener('click', () => {
-          // Highlight active episode
-          grid
-            .querySelectorAll('.episodes__ep-btn--active')
-            .forEach((b) => b.classList.remove('episodes__ep-btn--active'));
-          epBtn.classList.add('episodes__ep-btn--active');
-
-          // Mount player
-          playerMount.innerHTML = '';
-          renderPlayer(playerMount, {
-            embedUrl: ep.link_embed || '',
-            m3u8Url: ep.link_m3u8 || '',
-            serverName: server.server_name || `Server ${sIdx + 1}`,
-            episodeName: ep.name || 'Full',
-            backdropUrl: posterUrl(movie.poster_url)
-          });
-
-          playerMount.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          selectEpisode(epBtn, ep, server, sIdx);
         });
 
+        episodeButtons.push({ button: epBtn, ep });
         grid.appendChild(epBtn);
       });
 
@@ -383,12 +428,14 @@ export async function renderMovieDetail(container, slug) {
 
     // Put episodes inside body so they share the same container boundaries
     const episodesWrap = document.createElement('div');
-    episodesWrap.style.marginTop = '20px';
+    episodesWrap.className = 'episodes__list';
     episodesWrap.appendChild(gridsContainer);
     
     // Put episodeSection first, then info (if episodes exist)
     episodeSection.appendChild(episodesWrap);
     body.appendChild(episodeSection);
+
+    preferredEpisodeButton = findPreferredEpisodeButton(movie, episodeButtons);
   }
 
   // Append info below episodes
