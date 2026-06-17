@@ -1,14 +1,10 @@
 /**
- * CategoryGrid — paginated grid of movie cards
+ * CategoryGrid - paginated grid of movie cards.
  * Used for danh-sach, the-loai, and quoc-gia listing pages.
  */
 
 import { renderMovieCard } from './MovieCard.js';
 import { navigate } from '../router.js';
-
-// ---------------------------------------------------------------------------
-// Skeleton grid
-// ---------------------------------------------------------------------------
 
 function createSkeletonGrid(count = 10) {
   const grid = document.createElement('div');
@@ -32,46 +28,13 @@ function createSkeletonGrid(count = 10) {
   return grid;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export async function renderCategoryGrid(container, { type, fetchFn, title, currentPage = 1 }) {
   const wrapper = document.createElement('section');
   wrapper.className = 'category-grid';
 
-  // ---- Header (Breadcrumb + Title) ----
   const header = document.createElement('div');
   header.className = 'category-grid__header';
 
-  // ---- Breadcrumb ----
-  const breadcrumb = document.createElement('nav');
-  breadcrumb.className = 'category-grid__breadcrumb';
-  breadcrumb.setAttribute('aria-label', 'Breadcrumb');
-
-  const homeLink = document.createElement('a');
-  homeLink.className = 'category-grid__breadcrumb-link';
-  homeLink.href = '/';
-  homeLink.textContent = 'Trang chủ';
-  homeLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    navigate('/');
-  });
-  breadcrumb.appendChild(homeLink);
-
-  const sep = document.createElement('span');
-  sep.className = 'category-grid__breadcrumb-sep';
-  sep.textContent = '›';
-  breadcrumb.appendChild(sep);
-
-  const currentCrumb = document.createElement('span');
-  currentCrumb.className = 'category-grid__breadcrumb-current';
-  currentCrumb.textContent = title;
-  breadcrumb.appendChild(currentCrumb);
-
-  header.appendChild(breadcrumb);
-
-  // ---- Title ----
   const heading = document.createElement('h1');
   heading.className = 'category-grid__title';
   heading.textContent = title;
@@ -79,21 +42,17 @@ export async function renderCategoryGrid(container, { type, fetchFn, title, curr
 
   wrapper.appendChild(header);
 
-  // ---- Cards grid ----
   const grid = document.createElement('div');
   grid.className = 'category-grid__grid';
 
-  // ---- Pagination Container ----
   const paginationContainer = document.createElement('div');
   paginationContainer.className = 'category-grid__pagination pagination';
   paginationContainer.style.display = 'none';
 
-  // ---- Error message ----
   const errorEl = document.createElement('div');
   errorEl.className = 'category-grid__error';
   errorEl.style.display = 'none';
 
-  // ---- Skeleton placeholder ----
   const skeleton = createSkeletonGrid(10);
   wrapper.appendChild(skeleton);
 
@@ -105,7 +64,7 @@ export async function renderCategoryGrid(container, { type, fetchFn, title, curr
   function renderPagination(current, total) {
     paginationContainer.innerHTML = '';
     if (total <= 1) return;
-    
+
     paginationContainer.style.display = 'flex';
 
     const createBtn = (text, targetPage, isActive = false) => {
@@ -164,7 +123,6 @@ export async function renderCategoryGrid(container, { type, fetchFn, title, curr
     }
   }
 
-  // ---- Fetch & render ----
   try {
     const { items, pagination } = await fetchFn(currentPage);
 
@@ -197,4 +155,3 @@ export async function renderCategoryGrid(container, { type, fetchFn, title, curr
     errorEl.style.display = '';
   }
 }
-

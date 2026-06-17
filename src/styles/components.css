@@ -1131,22 +1131,6 @@
   color: #ffffff;
 }
 
-.category-grid__breadcrumb {
-  font-size: 13px;
-  color: #888888;
-  margin-bottom: 12px;
-}
-
-.category-grid__breadcrumb a {
-  color: #b3b3b3;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.category-grid__breadcrumb a:hover {
-  color: #ffffff;
-}
-
 .category-grid__grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
