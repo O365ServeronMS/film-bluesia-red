@@ -339,6 +339,7 @@ export async function renderMovieDetail(container, slug) {
             m3u8Url: ep.link_m3u8 || '',
             serverName: server.server_name || `Server ${sIdx + 1}`,
             episodeName: ep.name || 'Full',
+            backdropUrl: posterUrl(movie.poster_url)
           });
 
           playerMount.scrollIntoView({ behavior: 'smooth', block: 'center' });

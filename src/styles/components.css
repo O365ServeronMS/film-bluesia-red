@@ -818,6 +818,43 @@
   border: none;
 }
 
+.player__splash {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.player__splash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  transition: background 0.3s ease;
+}
+
+.player__splash:hover::before {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.player__play-btn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 11;
+  transition: transform 0.3s ease;
+}
+
+.player__splash:hover .player__play-btn {
+  transform: scale(1.1);
+}
+
 .player__back {
   display: inline-flex;
   align-items: center;
