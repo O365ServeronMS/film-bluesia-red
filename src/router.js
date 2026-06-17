@@ -80,6 +80,9 @@ function handleRoute() {
   }
 
   const { path, query } = getCurrentRoute();
+  
+  // Dispatch event so persistent UI components (like Header) can update
+  window.dispatchEvent(new CustomEvent('route-changed', { detail: path }));
 
   for (const route of routes) {
     const match = path.match(route.regex);

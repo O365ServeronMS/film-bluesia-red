@@ -12,7 +12,7 @@ import { navigate } from '../router.js';
 
 function createSkeletonGrid(count = 10) {
   const grid = document.createElement('div');
-  grid.className = 'category-grid__cards';
+  grid.className = 'category-grid__grid';
 
   for (let i = 0; i < count; i++) {
     const card = document.createElement('div');
@@ -47,11 +47,11 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
 
   const homeLink = document.createElement('a');
   homeLink.className = 'category-grid__breadcrumb-link';
-  homeLink.href = '#/';
+  homeLink.href = '/';
   homeLink.textContent = 'Trang chủ';
   homeLink.addEventListener('click', (e) => {
     e.preventDefault();
-    navigate('#/');
+    navigate('/');
   });
   breadcrumb.appendChild(homeLink);
 
@@ -75,7 +75,7 @@ export async function renderCategoryGrid(container, { type, fetchFn, title }) {
 
   // ---- Cards grid ----
   const grid = document.createElement('div');
-  grid.className = 'category-grid__cards';
+  grid.className = 'category-grid__grid';
 
   // ---- Load More button ----
   const loadMoreBtn = document.createElement('button');

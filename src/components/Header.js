@@ -4,11 +4,11 @@
 import { navigate, getCurrentRoute } from '../router.js';
 
 const NAV_LINKS = [
-  { label: 'Trang Chủ', hash: '#/' },
-  { label: 'Phim Lẻ', hash: '#/danh-sach/phim-le' },
-  { label: 'Phim Bộ', hash: '#/danh-sach/phim-bo' },
-  { label: 'Hoạt Hình', hash: '#/danh-sach/hoat-hinh' },
-  { label: 'TV Shows', hash: '#/danh-sach/tv-shows' },
+  { label: 'Trang Chủ', path: '/' },
+  { label: 'Phim Lẻ', path: '/danh-sach/phim-le' },
+  { label: 'Phim Bộ', path: '/danh-sach/phim-bo' },
+  { label: 'Hoạt Hình', path: '/danh-sach/hoat-hinh' },
+  { label: 'TV Shows', path: '/danh-sach/tv-shows' },
 ];
 
 /**
@@ -23,11 +23,11 @@ export function renderHeader(container) {
   // ── Logo ──
   const logo = document.createElement('a');
   logo.className = 'header__logo';
-  logo.href = '#/';
+  logo.href = '/';
   logo.innerHTML = '<img src="/logo-dark.png" alt="Film Bluesia" style="height: 36px; display: block;" />';
   logo.addEventListener('click', (e) => {
     e.preventDefault();
-    navigate('#/');
+    navigate('/');
   });
   header.appendChild(logo);
 
@@ -35,26 +35,36 @@ export function renderHeader(container) {
   const nav = document.createElement('nav');
   nav.className = 'header__nav';
 
-  const currentHash = window.location.hash || '#/';
+  const desktopLinks = [];
+  const mobileLinks = [];
 
-  NAV_LINKS.forEach(({ label, hash }) => {
-    const link = document.createElement('a');
-    link.className = 'header__nav-link';
-    link.href = hash;
-    link.textContent = label;
+  const createNavLinks = (containerEl, isMobile) => {
+    NAV_LINKS.forEach(({ label, path }) => {
+      const link = document.createElement('a');
+      link.className = isMobile ? 'header__mobile-link' : 'header__nav-link';
+      link.href = path;
+      link.textContent = label;
+      link.dataset.path = path;
 
-    if (currentHash === hash) {
-      link.classList.add('header__nav-link--active');
-    }
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (isMobile) {
+          mobileMenu.classList.remove('header__mobile-menu--open');
+        }
+        navigate(path);
+      });
 
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      navigate(hash);
+      if (isMobile) {
+        mobileLinks.push(link);
+      } else {
+        desktopLinks.push(link);
+      }
+
+      containerEl.appendChild(link);
     });
+  };
 
-    nav.appendChild(link);
-  });
-
+  createNavLinks(nav, false);
   header.appendChild(nav);
 
   // ── Right-side actions ──
@@ -83,32 +93,39 @@ export function renderHeader(container) {
   // ── Mobile menu ──
   const mobileMenu = document.createElement('div');
   mobileMenu.className = 'header__mobile-menu';
-
-  NAV_LINKS.forEach(({ label, hash }) => {
-    const link = document.createElement('a');
-    link.className = 'header__mobile-link';
-    link.href = hash;
-    link.textContent = label;
-
-    if (currentHash === hash) {
-      link.classList.add('header__mobile-link--active');
-    }
-
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      mobileMenu.classList.remove('header__mobile-menu--open');
-      navigate(hash);
-    });
-
-    mobileMenu.appendChild(link);
-  });
-
+  createNavLinks(mobileMenu, true);
   header.appendChild(mobileMenu);
 
-  // Hamburger toggle
   hamburger.addEventListener('click', () => {
     mobileMenu.classList.toggle('header__mobile-menu--open');
   });
+
+  // ── Active State Management ──
+  const updateActiveLinks = () => {
+    const { path } = getCurrentRoute();
+    
+    desktopLinks.forEach(link => {
+      if (link.dataset.path === path) {
+        link.classList.add('header__nav-link--active');
+      } else {
+        link.classList.remove('header__nav-link--active');
+      }
+    });
+
+    mobileLinks.forEach(link => {
+      if (link.dataset.path === path) {
+        link.classList.add('header__mobile-link--active');
+      } else {
+        link.classList.remove('header__mobile-link--active');
+      }
+    });
+  };
+
+  // Initial update
+  updateActiveLinks();
+
+  // Listen to custom route event to update highlighting
+  window.addEventListener('route-changed', updateActiveLinks);
 
   // ── Scroll behaviour ──
   function onScroll() {

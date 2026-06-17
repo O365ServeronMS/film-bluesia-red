@@ -446,15 +446,19 @@
    ========================================================================== */
 
 .movie-card {
-  flex: 0 0 auto;
-  width: calc((100% - 40px) / 6);
-  scroll-snap-align: start;
   position: relative;
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.3s ease;
   will-change: transform;
+  width: 100%;
+}
+
+.carousel__track .movie-card {
+  flex: 0 0 auto;
+  width: calc((100% - 40px) / 6);
+  scroll-snap-align: start;
 }
 
 .movie-card:hover {

@@ -37,13 +37,13 @@ export function renderMovieCard(container, movie, rank = null) {
   overlay.className = 'movie-card__overlay';
 
   const overlayName = document.createElement('span');
-  overlayName.className = 'movie-card__overlay-name';
+  overlayName.className = 'movie-card__title';
   overlayName.textContent = movie.name;
   overlay.appendChild(overlayName);
 
   if (movie.year) {
     const overlayYear = document.createElement('span');
-    overlayYear.className = 'movie-card__overlay-year';
+    overlayYear.className = 'movie-card__meta';
     overlayYear.textContent = movie.year;
     overlay.appendChild(overlayYear);
   }
