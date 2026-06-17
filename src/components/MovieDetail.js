@@ -301,19 +301,23 @@ export async function renderMovieDetail(container, slug) {
     );
 
   if (hasEpisodes) {
-    const epHeading = document.createElement('h2');
-    epHeading.className = 'detail__section-label'; // Using the same styling as 'Nội dung phim'
-    epHeading.textContent = 'Danh sách tập';
-    episodeSection.appendChild(epHeading);
-
     // Player mount point (filled when user clicks an episode)
     const playerMount = document.createElement('div');
     playerMount.className = 'detail__player-mount';
     episodeSection.appendChild(playerMount);
 
-    // Server tabs
-    const tabBar = document.createElement('div');
-    tabBar.className = 'episodes__servers';
+    // Episode Header (Title + Server Select inline)
+    const epHeader = document.createElement('div');
+    epHeader.className = 'episodes__header';
+
+    const epHeading = document.createElement('h2');
+    epHeading.className = 'detail__section-label';
+    epHeading.textContent = 'Danh sách tập';
+    epHeader.appendChild(epHeading);
+
+    // Server select dropdown
+    const serverSelect = document.createElement('select');
+    serverSelect.className = 'episodes__server-select';
 
     // Episode grids per server
     const gridsContainer = document.createElement('div');
@@ -322,13 +326,11 @@ export async function renderMovieDetail(container, slug) {
     movie.episodes.forEach((server, sIdx) => {
       if (!Array.isArray(server.server_data) || server.server_data.length === 0) return;
 
-      // Tab button
-      const tab = document.createElement('button');
-      tab.className = 'episodes__server-btn';
-      tab.textContent = server.server_name || `Server ${sIdx + 1}`;
-      tab.dataset.serverIndex = sIdx;
-      if (sIdx === 0) tab.classList.add('episodes__server-btn--active');
-      tabBar.appendChild(tab);
+      // Add option to dropdown
+      const option = document.createElement('option');
+      option.value = sIdx;
+      option.textContent = server.server_name || `Server ${sIdx + 1}`;
+      serverSelect.appendChild(option);
 
       // Episode grid for this server
       const grid = document.createElement('div');
@@ -366,19 +368,14 @@ export async function renderMovieDetail(container, slug) {
       gridsContainer.appendChild(grid);
     });
 
-    // Tab switching
-    tabBar.addEventListener('click', (e) => {
-      const tab = e.target.closest('.episodes__server-btn');
-      if (!tab) return;
-      const idx = tab.dataset.serverIndex;
+    if (serverSelect.options.length > 0) {
+      epHeader.appendChild(serverSelect);
+    }
+    episodeSection.appendChild(epHeader);
 
-      // Update active tab
-      tabBar
-        .querySelectorAll('.episodes__server-btn')
-        .forEach((t) => t.classList.remove('episodes__server-btn--active'));
-      tab.classList.add('episodes__server-btn--active');
-
-      // Show matching grid, hide others
+    // Dropdown switching
+    serverSelect.addEventListener('change', (e) => {
+      const idx = e.target.value;
       gridsContainer.querySelectorAll('.episodes__grid').forEach((g) => {
         g.style.display = g.dataset.serverIndex === idx ? '' : 'none';
       });
@@ -386,11 +383,9 @@ export async function renderMovieDetail(container, slug) {
 
     // Put episodes inside body so they share the same container boundaries
     const episodesWrap = document.createElement('div');
-    episodesWrap.style.marginTop = '40px';
-    episodesWrap.appendChild(tabBar);
+    episodesWrap.style.marginTop = '20px';
     episodesWrap.appendChild(gridsContainer);
     
-    // Add episodes to episodeSection (which is already inside info or appended later?)
     // Put episodeSection first, then info (if episodes exist)
     episodeSection.appendChild(episodesWrap);
     body.appendChild(episodeSection);
