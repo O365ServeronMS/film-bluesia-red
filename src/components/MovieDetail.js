@@ -287,7 +287,7 @@ export async function renderMovieDetail(container, slug) {
 
   if (hasEpisodes) {
     const epHeading = document.createElement('h2');
-    epHeading.className = 'detail__section-title';
+    epHeading.className = 'detail__section-label'; // Using the same styling as 'Nội dung phim'
     epHeading.textContent = 'Danh sách tập';
     episodeSection.appendChild(epHeading);
 
@@ -298,39 +298,39 @@ export async function renderMovieDetail(container, slug) {
 
     // Server tabs
     const tabBar = document.createElement('div');
-    tabBar.className = 'detail__server-tabs';
+    tabBar.className = 'episodes__servers';
 
     // Episode grids per server
     const gridsContainer = document.createElement('div');
-    gridsContainer.className = 'detail__episode-grids';
+    gridsContainer.className = 'episodes';
 
     movie.episodes.forEach((server, sIdx) => {
       if (!Array.isArray(server.server_data) || server.server_data.length === 0) return;
 
       // Tab button
       const tab = document.createElement('button');
-      tab.className = 'detail__server-tab';
+      tab.className = 'episodes__server-btn';
       tab.textContent = server.server_name || `Server ${sIdx + 1}`;
       tab.dataset.serverIndex = sIdx;
-      if (sIdx === 0) tab.classList.add('detail__server-tab--active');
+      if (sIdx === 0) tab.classList.add('episodes__server-btn--active');
       tabBar.appendChild(tab);
 
       // Episode grid for this server
       const grid = document.createElement('div');
-      grid.className = 'detail__episode-grid';
+      grid.className = 'episodes__grid';
       grid.dataset.serverIndex = sIdx;
       if (sIdx !== 0) grid.style.display = 'none';
 
       server.server_data.forEach((ep) => {
         const epBtn = document.createElement('button');
-        epBtn.className = 'detail__episode-btn';
+        epBtn.className = 'episodes__ep-btn';
         epBtn.textContent = ep.name || 'Full';
         epBtn.addEventListener('click', () => {
           // Highlight active episode
           grid
-            .querySelectorAll('.detail__episode-btn--active')
-            .forEach((b) => b.classList.remove('detail__episode-btn--active'));
-          epBtn.classList.add('detail__episode-btn--active');
+            .querySelectorAll('.episodes__ep-btn--active')
+            .forEach((b) => b.classList.remove('episodes__ep-btn--active'));
+          epBtn.classList.add('episodes__ep-btn--active');
 
           // Mount player
           playerMount.innerHTML = '';
@@ -341,7 +341,7 @@ export async function renderMovieDetail(container, slug) {
             episodeName: ep.name || 'Full',
           });
 
-          playerMount.scrollIntoView({ behavior: 'smooth' });
+          playerMount.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
 
         grid.appendChild(epBtn);
@@ -352,25 +352,35 @@ export async function renderMovieDetail(container, slug) {
 
     // Tab switching
     tabBar.addEventListener('click', (e) => {
-      const tab = e.target.closest('.detail__server-tab');
+      const tab = e.target.closest('.episodes__server-btn');
       if (!tab) return;
       const idx = tab.dataset.serverIndex;
 
       // Update active tab
       tabBar
-        .querySelectorAll('.detail__server-tab')
-        .forEach((t) => t.classList.remove('detail__server-tab--active'));
-      tab.classList.add('detail__server-tab--active');
+        .querySelectorAll('.episodes__server-btn')
+        .forEach((t) => t.classList.remove('episodes__server-btn--active'));
+      tab.classList.add('episodes__server-btn--active');
 
       // Show matching grid, hide others
-      gridsContainer.querySelectorAll('.detail__episode-grid').forEach((g) => {
+      gridsContainer.querySelectorAll('.episodes__grid').forEach((g) => {
         g.style.display = g.dataset.serverIndex === idx ? '' : 'none';
       });
     });
 
-    episodeSection.appendChild(tabBar);
-    episodeSection.appendChild(gridsContainer);
-    detail.appendChild(episodeSection);
+    // Put episodes inside body so they share the same container boundaries
+    const episodesWrap = document.createElement('div');
+    episodesWrap.style.marginTop = '40px';
+    episodesWrap.appendChild(tabBar);
+    episodesWrap.appendChild(gridsContainer);
+    
+    // Add episodes to episodeSection (which is already inside info or appended later?)
+    // Wait, earlier I did: episodeSection = document.createElement('section');
+    // But it wasn't appended to anything! I need to append episodeSection to detail or body!
+    episodeSection.appendChild(episodesWrap);
+    
+    // Actually, let's append episodeSection to body, below info
+    body.appendChild(episodeSection);
   }
 
   container.appendChild(detail);

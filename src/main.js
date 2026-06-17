@@ -161,7 +161,9 @@ async function renderHomePage() {
 // ─── Movie Detail Page ──────────────────────────────────
 function renderDetailPage({ params }) {
   const page = getPageContainer();
-  renderMovieDetail(page, params.slug);
+  const detailWrap = document.createElement('div');
+  page.appendChild(detailWrap);
+  renderMovieDetail(detailWrap, params.slug);
   renderFooter(page);
 }
 
