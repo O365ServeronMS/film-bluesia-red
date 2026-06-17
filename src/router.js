@@ -85,25 +85,40 @@ function handleRoute() {
   window.dispatchEvent(new CustomEvent('route-changed', { detail: path }));
 
   for (const route of routes) {
-    const match = path.match(route.regex);
-    if (match) {
-      const params = {};
-      route.paramNames.forEach((name, i) => {
-        params[name] = decodeURIComponent(match[i + 1]);
-      });
-
-      // Scroll to top on navigation
+    // Exact match for root or static paths
+    if (route.path === path || route.path === path.replace(/\/$/, '')) {
       window.scrollTo(0, 0);
-
-      // Call handler, store cleanup function if returned
-      const cleanup = route.handler({ params, query });
-      if (typeof cleanup === 'function') {
-        currentCleanup = cleanup;
-      }
+      const cleanup = route.handler({ params: {}, query });
+      if (typeof cleanup === 'function') currentCleanup = cleanup;
       return;
+    }
+
+    // Prefix match for dynamic paths like /phim/:slug
+    if (route.path.includes(':')) {
+      const prefix = route.path.split('/:')[0] + '/'; // e.g. "/phim/"
+      if (path.startsWith(prefix)) {
+        const slug = path.slice(prefix.length).replace(/\/$/, ''); // extract "hoang-tu-quy"
+        if (slug) {
+          const params = {};
+          params[route.paramNames[0]] = decodeURIComponent(slug);
+          
+          window.scrollTo(0, 0);
+          const cleanup = route.handler({ params, query });
+          if (typeof cleanup === 'function') currentCleanup = cleanup;
+          return;
+        }
+      }
     }
   }
 
-  // 404 fallback — redirect to home
-  navigate('/');
+  // 404 fallback — instead of redirecting silently, show error to help debug
+  console.error("Router 404: No route matched path", path);
+  document.body.innerHTML = `
+    <div style="padding: 50px; text-align: center; color: white;">
+      <h2>Lỗi Không Tìm Thấy Trang (404)</h2>
+      <p>Đường dẫn hiện tại: <strong>${path}</strong></p>
+      <p>Không khớp với bất kỳ Route nào.</p>
+      <a href="/" style="color: #e50914; text-decoration: underline; margin-top: 20px; display: inline-block;">Quay về trang chủ</a>
+    </div>
+  `;
 }
