@@ -573,13 +573,13 @@
 }
 
 @media (max-width: 1024px) {
-  .movie-card {
+  .carousel__track .movie-card {
     width: calc((100% - 24px) / 4);
   }
 }
 
 @media (max-width: 768px) {
-  .movie-card {
+  .carousel__track .movie-card {
     width: calc((100% - 8px) / 2.15);
   }
 
