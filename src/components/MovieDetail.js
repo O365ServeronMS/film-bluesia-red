@@ -46,7 +46,7 @@ function createDetailSkeleton() {
 
 function createPill(text, href) {
   const pill = document.createElement('a');
-  pill.className = 'detail__pill';
+  pill.className = 'detail__tag';
   pill.textContent = text;
   if (href) {
     pill.href = href;
@@ -236,6 +236,23 @@ export async function renderMovieDetail(container, slug) {
     descBody.innerHTML = movie.content;
     descWrap.appendChild(descBody);
 
+    const readMoreBtn = document.createElement('button');
+    readMoreBtn.className = 'detail__read-more';
+    readMoreBtn.textContent = 'Xem thêm ▾';
+    
+    // Check if content is long enough to need expansion
+    // We defer this until after it's in the DOM to check height
+    requestAnimationFrame(() => {
+      if (descBody.scrollHeight > descBody.clientHeight) {
+        descWrap.appendChild(readMoreBtn);
+      }
+    });
+
+    readMoreBtn.addEventListener('click', () => {
+      const isExpanded = descBody.classList.toggle('detail__description-body--expanded');
+      readMoreBtn.textContent = isExpanded ? 'Rút gọn ▴' : 'Xem thêm ▾';
+    });
+
     info.appendChild(descWrap);
   }
 
@@ -274,9 +291,7 @@ export async function renderMovieDetail(container, slug) {
 
     info.appendChild(dirRow);
   }
-
-  body.appendChild(info);
-  detail.appendChild(body);
+  // Info is appended later after episodes
 
   // ==== Episode Section ====
   const hasEpisodes =
@@ -376,13 +391,14 @@ export async function renderMovieDetail(container, slug) {
     episodesWrap.appendChild(gridsContainer);
     
     // Add episodes to episodeSection (which is already inside info or appended later?)
-    // Wait, earlier I did: episodeSection = document.createElement('section');
-    // But it wasn't appended to anything! I need to append episodeSection to detail or body!
+    // Put episodeSection first, then info (if episodes exist)
     episodeSection.appendChild(episodesWrap);
-    
-    // Actually, let's append episodeSection to body, below info
     body.appendChild(episodeSection);
   }
+
+  // Append info below episodes
+  body.appendChild(info);
+  detail.appendChild(body);
 
   container.appendChild(detail);
 }
