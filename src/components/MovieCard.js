@@ -32,6 +32,28 @@ export function renderMovieCard(container, movie, rank = null) {
 
   card.appendChild(img);
 
+  // ── Status/Quality Badge ──
+  let badgeText = '';
+  const epCurrent = movie.episode_current || '';
+  
+  if (movie.type === 'single') {
+    if (epCurrent.toLowerCase().includes('trailer') || movie.status === 'trailer') {
+      badgeText = 'Trailer';
+    } else {
+      badgeText = movie.quality || 'HD';
+    }
+  } else {
+    // For series, hoathinh, etc.
+    badgeText = epCurrent;
+  }
+
+  if (badgeText) {
+    const badge = document.createElement('div');
+    badge.className = 'movie-card__quality';
+    badge.textContent = badgeText;
+    card.appendChild(badge);
+  }
+
   // ── Hover overlay ──
   const overlay = document.createElement('div');
   overlay.className = 'movie-card__overlay';
