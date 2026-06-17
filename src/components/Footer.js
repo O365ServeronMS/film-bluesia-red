@@ -54,7 +54,7 @@ export function renderFooter(container) {
 
   // ── Top section with columns ──
   const columnsWrapper = document.createElement('div');
-  columnsWrapper.className = 'footer__columns';
+  columnsWrapper.className = 'footer__grid';
 
   COLUMNS.forEach((col) => {
     const column = document.createElement('div');
