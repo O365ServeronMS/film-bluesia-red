@@ -1109,24 +1109,46 @@
   max-width: 1280px;
 }
 
-/* Portrait thumb pinned to top-left of hero, below fixed header */
+/* Portrait poster — visuals only; layout handled by the flow shell below */
 .detail__thumb {
-  position: absolute;
-  top: 68px;
-  left: 4%;
   width: 185px;
   height: 278px; /* 2:3 ratio */
   object-fit: cover;
   border-radius: 4px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
-  z-index: 1;
 }
 
-/* Align hero content under the thumb (same left edge) */
+/* Thumb present: lay thumb + content out in normal flow so they can never
+   overlap, regardless of viewport aspect ratio (fixes landscape collision). */
+.hero--has-thumb {
+  height: auto; /* allow the hero to grow on short/landscape viewports */
+}
+
+.hero--has-thumb .hero__inner {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  margin: 0 auto;
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 88px 4% 56px; /* top clears fixed header; sides match body gutter */
+  box-sizing: border-box;
+}
+
+.hero--has-thumb .detail__thumb {
+  flex: none;
+}
+
 .hero--has-thumb .hero__content {
-  left: 4%;
+  position: static;
+  width: auto;
+  max-width: 560px;
   padding: 0;
-  max-width: 500px;
 }
 
 .hero--has-thumb .hero__title {
@@ -1243,18 +1265,42 @@
     font-size: 28px;
   }
 
-  .detail__thumb {
-    display: none;
+  .hero--has-thumb .hero__inner {
+    min-height: 70vh;
+    justify-content: flex-end; /* compact stack near the bottom on phones */
+    gap: 18px;
+    padding: 80px 4% 40px;
+  }
+
+  .hero--has-thumb .detail__thumb {
+    width: 132px;
+    height: 198px;
   }
 
   .hero--has-thumb .hero__content {
-    left: 0;
-    padding: 0 4%;
-    max-width: 600px;
+    max-width: none;
   }
 
   .hero--has-thumb .hero__title {
-    font-size: 28px;
+    font-size: 26px;
+  }
+}
+
+/* Landscape phones: shrink poster so the short viewport isn't dominated */
+@media (orientation: landscape) and (max-height: 500px) {
+  .hero--has-thumb .hero__inner {
+    min-height: 100vh;
+    gap: 16px;
+    padding: 76px 4% 32px;
+  }
+
+  .hero--has-thumb .detail__thumb {
+    width: 112px;
+    height: 168px;
+  }
+
+  .hero--has-thumb .hero__title {
+    font-size: 24px;
   }
 }
 
