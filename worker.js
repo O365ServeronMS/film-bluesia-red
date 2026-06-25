@@ -222,7 +222,7 @@ function buildTrendingItems(itemGroups, trendingIds) {
       if (id != null && trendingIds.has(String(id))) bySlug.set(item.slug, item);
     }
   }
-  return Array.from(bySlug.values()).slice(0, 12);
+  return Array.from(bySlug.values()).slice(0, 24);
 }
 
 function rankHeroMovies(auMyItems, cinemaItems) {

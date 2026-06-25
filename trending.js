@@ -15,13 +15,14 @@ const TRENDING_TTL = 6 * 60 * 60; // seconds
 export async function refreshTrendingMovies(env, token) {
   if (!token) return { skipped: true, reason: 'missing-token' };
 
-  const res = await fetch('https://api.themoviedb.org/3/trending/all/week?language=en-US', {
-    headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
-  });
-  if (!res.ok) throw new Error(`TMDB upstream error: ${res.status}`);
+  const headers = { Authorization: `Bearer ${token}`, accept: 'application/json' };
+  const pages = await Promise.all([1, 2].map(async page => {
+    const res = await fetch(`https://api.themoviedb.org/3/trending/all/week?language=en-US&page=${page}`, { headers });
+    if (!res.ok) throw new Error(`TMDB upstream error: ${res.status}`);
+    return res.json();
+  }));
 
-  const data = await res.json();
-  const results = Array.isArray(data?.results) ? data.results : [];
+  const results = pages.flatMap(data => (Array.isArray(data?.results) ? data.results : []));
   const ids = [...new Set(
     results
       .filter(item => item?.media_type === 'movie' || item?.media_type === 'tv')

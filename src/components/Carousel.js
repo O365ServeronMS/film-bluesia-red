@@ -64,18 +64,53 @@ export function renderCarousel(container, { title, items, seeAllLink, showRank }
   rightArrow.textContent = '›';
   wrapper.appendChild(rightArrow);
 
-  // ── Arrow scroll behaviour ──
-  function scrollAmount() {
-    return track.clientWidth * 0.8;
+  // ── Premium eased slide (one page of cards per click) ──
+  let rafId = null;
+
+  function pageDelta() {
+    const firstCard = track.querySelector('.movie-card');
+    if (!firstCard) return track.clientWidth * 0.8;
+    const gap = parseFloat(getComputedStyle(track).gap) || 8;
+    const step = firstCard.getBoundingClientRect().width + gap;
+    const perPage = Math.max(1, Math.floor(track.clientWidth / step));
+    return perPage * step;
   }
 
-  leftArrow.addEventListener('click', () => {
-    track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
-  });
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
 
-  rightArrow.addEventListener('click', () => {
-    track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
-  });
+  function slide(direction) {
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    const start = track.scrollLeft;
+    const target = Math.max(0, Math.min(maxScroll, start + pageDelta() * direction));
+    const distance = target - start;
+    if (Math.abs(distance) < 1) return;
+
+    if (rafId) cancelAnimationFrame(rafId);
+    // Drive the scroll ourselves so the easing is consistent across browsers.
+    track.style.scrollSnapType = 'none';
+    track.style.scrollBehavior = 'auto';
+    const startTime = performance.now();
+    const duration = 550;
+
+    function step(now) {
+      const t = Math.min(1, (now - startTime) / duration);
+      track.scrollLeft = start + distance * easeInOutCubic(t);
+      if (t < 1) {
+        rafId = requestAnimationFrame(step);
+      } else {
+        rafId = null;
+        track.style.scrollSnapType = '';
+        track.style.scrollBehavior = '';
+        updateArrowVisibility();
+      }
+    }
+    rafId = requestAnimationFrame(step);
+  }
+
+  leftArrow.addEventListener('click', () => slide(-1));
+  rightArrow.addEventListener('click', () => slide(1));
 
   // ── Arrow visibility based on scroll position ──
   function updateArrowVisibility() {
