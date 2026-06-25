@@ -181,13 +181,6 @@ export async function renderMovieDetail(container, slug) {
 
   content.appendChild(meta);
 
-  // Description
-  const desc = document.createElement('p');
-  desc.className = 'hero__description';
-  const descText = [movie.name, movie.origin_name].filter(Boolean).join(' — ');
-  desc.textContent = descText;
-  content.appendChild(desc);
-
   // Action buttons
   const btnGroup = document.createElement('div');
   btnGroup.className = 'hero__buttons';
