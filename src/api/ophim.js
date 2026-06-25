@@ -39,7 +39,7 @@ async function fetchJson(url) {
  * @returns {Promise<{items: Array, pagination: Object}>}
  */
 export async function getNewMovies(page = 1) {
-  const data = await fetchJson(`${API_BASE}/danh-sach/phim-moi-cap-nhat?page=${page}`);
+  const data = await fetchJson(`/api/list?type=phim-moi-cap-nhat&page=${page}`);
   return {
     items: data.items || [],
     pagination: data.pagination || {},
@@ -54,7 +54,7 @@ export async function getNewMovies(page = 1) {
  * @returns {Promise<{items: Array, pagination: Object, titlePage: string}>}
  */
 export async function getMoviesByType(type, page = 1) {
-  const data = await fetchJson(`${API_BASE}/v1/api/danh-sach/${type}?page=${page}`);
+  const data = await fetchJson(`/api/list?type=${type}&page=${page}`);
   const d = data.data || data;
   return {
     items: (d.items || []).map(normalizeListItem),
@@ -119,7 +119,7 @@ export async function getCountries() {
  * Get movies by genre slug
  */
 export async function getMoviesByGenre(genreSlug, page = 1) {
-  const data = await fetchJson(`${API_BASE}/v1/api/the-loai/${genreSlug}?page=${page}`);
+  const data = await fetchJson(`/api/genre?slug=${genreSlug}&page=${page}`);
   const d = data.data || data;
   return {
     items: (d.items || []).map(normalizeListItem),
@@ -133,7 +133,7 @@ export async function getMoviesByGenre(genreSlug, page = 1) {
  * Get movies by country slug
  */
 export async function getMoviesByCountry(countrySlug, page = 1) {
-  const data = await fetchJson(`${API_BASE}/v1/api/quoc-gia/${countrySlug}?page=${page}`);
+  const data = await fetchJson(`/api/country?slug=${countrySlug}&page=${page}`);
   const d = data.data || data;
   return {
     items: (d.items || []).map(normalizeListItem),

@@ -1,43 +1,91 @@
 # AI Agent Guidelines for Film Bluesia Red
 
-Welcome, fellow AI agent! If you are reading this, you are about to modify the `film-bluesia-red` codebase. Before you write a single line of code, **read this entire document**. It contains critical context and architectural rules to ensure you don't accidentally revert hard-won improvements or break the premium design system.
+Welcome, fellow AI agent! You are about to modify the `film-bluesia-red` codebase. Before you write a single line of code, **read this entire document**. 
 
-## 1. Core Architecture
+This document merges core AI behavioral principles with the critical context and architectural rules of this specific project. Our goal is to avoid overcomplication, prevent common mistakes, and ensure hard-won premium UI improvements are not accidentally reverted.
+
+---
+
+## PART 1: CORE BEHAVIORAL PRINCIPLES
+*These guidelines bias toward caution over speed to reduce common AI coding mistakes.*
+
+### 1. Think Before Coding
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+**Minimum code that solves the problem. Nothing speculative.**
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+Ask yourself: *"Would a senior engineer say this is overcomplicated?"* If yes, simplify.
+
+### 3. Surgical Changes
+**Touch only what you must. Clean up only your own mess.**
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+**The test:** Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+**Define success criteria. Loop until verified.**
+- Transform tasks into verifiable goals (e.g., "Fix bug" → "Write test reproducing it, then make it pass").
+- For multi-step tasks, state a brief plan.
+- Strong success criteria let you loop independently. Weak criteria require constant clarification.
+
+---
+
+## PART 2: PROJECT-SPECIFIC ARCHITECTURE & RULES
+
+### 1. Core Architecture
 - **Tech Stack**: Vanilla JavaScript (ESModules), plain CSS, and Vite as the bundler. **No React, Vue, or Tailwind.** Keep dependencies minimal.
 - **Routing**: The app uses a custom **HTML5 History API Router** (located in `src/router.js`).
   - **CRITICAL**: Do **NOT** use Hash Routing (`#/path`). All paths must be clean (e.g., `/phim/slug`).
   - Link clicks are intercepted globally in `router.js` to prevent page reloads.
   - Server-side routing for Cloudflare Pages is handled automatically by Cloudflare's Vite framework detection (`not_found_handling: "single-page-application"`). **Do NOT** manually create a `public/_redirects` file for routing, as it will conflict and cause an infinite loop during deployment.
 
-## 2. Design Philosophy & Rules (The "Netflix Standard")
-The design is strictly governed by `docs/DESIGN.md`. The goal is an immersive, premium, cinematic experience.
+### 2. Local Workflows
+- `npm install`
+- `npm run dev` (Runs Vite frontend on port 3000. `worker.js` API routes are NOT active).
+- `npm run build` then `npm start` (Runs full local app: Wrangler serves `dist/`, executes `worker.js`, and binds `MOVIES_KV`).
+- `npm run preview` (Inspect static Vite build only).
+- No test/lint scripts currently. Minimum: run `npm run build` and manually verify.
+
+### 3. Design Philosophy (The "Netflix Standard")
+The design is strictly governed by `docs/DESIGN.md` to create an immersive, premium, cinematic experience.
 - **Colors**: True black (`#000000`) or deep grey (`#111111`) backgrounds only. Vibrant red (`#e50914`) for primary accents.
-- **Movie Cards (`MovieCard.js`)**: Follow the "Infinite Digital Shelf" concept. Cards must only show the poster image. **Do not** add plain text underneath the cards (e.g., "HD", "Tập Full"). Meta information should only appear as absolutely positioned overlays (e.g., on hover).
-- **Cinematic Layout (`Hero.js` & `MovieDetail.js`)**: The top of the home page and individual movie detail pages must feature a full-bleed, edge-to-edge backdrop image that fades smoothly into the black background via a CSS gradient. Information (Title, Year, Buttons) floats on the left side over the gradient. Do not revert to a split-column (poster next to text) layout for the top section.
-- **Icons**: Use crisp, modern SVG icons for buttons (e.g., Play, Info) instead of text-based symbols (like `▶` or `i`).
+- **Movie Cards (`MovieCard.js`)**: Follow the "Infinite Digital Shelf" concept. Cards must **only** show the poster image. **Do not** add plain text underneath (e.g., "HD", "Tập Full"). Meta info must be absolutely positioned overlays (e.g., on hover).
+- **Cinematic Layout (`Hero.js` & `MovieDetail.js`)**: The top of the home/detail pages must feature a full-bleed backdrop image that fades smoothly into the black background via CSS gradient. Info floats on the left over the gradient. No split-column layouts for the top section.
+- **Icons**: Use crisp, modern SVG icons for buttons. No text-based symbols (`▶`, `i`).
 
-## 3. Logo Management
-There are two separate logos used for specific visual reasons. Do not merge them:
-- **`public/logo-dark.png`**: A logo with a pure black (`#000000`) background. This is used in `src/components/Header.js` so it melts seamlessly into the dark navigation bar.
-- **`public/logo.png`**: A logo with a white/light background. This is used exclusively as the favicon in `index.html` to guarantee visibility on light-themed browser tabs.
+### 4. Logo Management
+Two separate logos for specific visual reasons; do not merge:
+- **`public/logo-dark.png`**: Pure black (`#000000`) background. Used in `src/components/Header.js` to melt seamlessly into the dark navbar.
+- **`public/logo.png`**: White/light background. Used exclusively as the favicon in `index.html` for visibility on light browser tabs.
 
-## 4. API Handling (`src/api/ophim.js`)
-- The app fetches data from the OPhim API (`https://ophim1.com/`).
-- **Data Structure Quirks**: The API payload structure can be inconsistent between different endpoints (e.g., `data.item` vs `data.movie` vs `data.data.item`). The parsers in `ophim.js` (like `getMovieDetail`) handle these fallbacks. If an API call fails to render data, check the JSON structure first before modifying components.
+### 5. API Handling (`src/api/ophim.js`)
+- App fetches data from OPhim API (`https://ophim1.com/`).
+- **Data Structure Quirks**: Payload structures vary (e.g., `data.item` vs `data.movie` vs `data.data.item`). `ophim.js` parsers handle fallbacks. If an API call fails to render, check the JSON structure before modifying components.
 
-## 5. CSS Architecture (`src/styles/components.css`)
-- Use BEM-like naming conventions (e.g., `hero`, `hero__title`, `hero__btn--primary`).
-- Ensure all hover states scale smoothly (`transform: scale()`, `transition: ...`).
-- Keep border radiuses minimal (`4px` or `8px`) for a sharper, more mature aesthetic.
+### 6. CSS Architecture (`src/styles/components.css`)
+- Use BEM-like naming (`hero`, `hero__title`, `hero__btn--primary`).
+- Hover states must scale smoothly (`transform: scale()`, `transition: ...`).
+- Minimal border radiuses (`4px` or `8px`) for a sharper aesthetic.
 
-By adhering strictly to these guidelines, you will preserve the structural integrity and premium feel of the application. Good luck!
-
-## 6. Recent Optimizations & UI Policies (Do Not Revert)
+### 7. Recent Optimizations & UI Policies (Do Not Revert)
 Over multiple iterations, the following premium features and UX fixes have been solidified. **Do not remove or simplify them**:
-- **Carousel Navigation**: The movie carousels feature `<` and `>` arrow buttons for easy desktop navigation. These must be preserved.
-- **Premium Search Overlay**: The search uses a full-screen `backdrop-filter: blur()` glassmorphism effect. It features a giant input, SVG icons, staggered `fade-up` animations for results, and a "Pill" design for recent searches (with individual and "clear all" delete buttons). It also automatically closes on route change. **Do not revert to a simple dropdown or basic list.**
-- **Global Navigation (Sticky Back Button)**: The "Back" (`Quay lại`) button is integrated directly into the global `Header` (in `Header.js`), making it a sticky, universally accessible button that smartly hides on the home page. **Do not re-add a floating back button into `MovieDetail.js`**.
-- **Mobile Landscape Header**: The global Header uses a `@media (max-height: 500px) and (orientation: landscape)` query to aggressively shrink its height to `48px`. This ensures the navigation bar doesn't waste precious vertical space when phones are rotated. **Do not remove this media query.**
-- **Static Numbered Pagination**: Category grids (Phim Lẻ, Phim Bộ, etc.) MUST use explicit URL query parameters (`?page=N`) and static numbered pagination. **Do NOT use Infinite Scroll** (via `IntersectionObserver`), because navigating to a movie and clicking "Back" in a simple SPA destroys the user's scroll position and reloads from Page 1. The numbered pagination UI should be minimalist, with transparent backgrounds and a red accent for the active page.
-- **Movie Card Mobile CSS**: Mobile media queries limiting the width of `.movie-card` (e.g., `width: calc(...)`) are specifically scoped to `.carousel__track .movie-card`. **Do not apply these widths globally**, as it will break and shrink the posters in the Category Grid.
-- **Premium Metadata Hierarchy (`MovieDetail.js`)**: Do NOT add large headers like `<h3>Nội dung phim</h3>`. The plot description should stand alone. Secondary metadata (Diễn viên, Đạo diễn) must be visually subordinated: use a smaller font size (`14px`), dim gray labels (`#777777`), and group them tightly in `.detail__metadata-group` (`gap: 8px`) to avoid massive whitespace gaps. Do not let secondary metadata dominate the plot text.
+- **Carousel Navigation**: Desktop `<` and `>` arrow buttons must be preserved.
+- **Premium Search Overlay**: Full-screen `backdrop-filter: blur()`, giant input, SVG icons, staggered `fade-up` animations, "Pill" design for recent searches (with individual/clear buttons). Closes automatically on route change. **No simple dropdowns.**
+- **Global Navigation (Sticky Back Button)**: The "Back" button is integrated directly into the global `Header.js`, smartly hiding on the home page. **Do not re-add floating back buttons into `MovieDetail.js`.**
+- **Mobile Landscape Header**: Uses `@media (max-height: 500px) and (orientation: landscape)` to aggressively shrink height to `48px`. **Do not remove this media query.**
+- **Static Numbered Pagination**: Category grids MUST use explicit URL query parameters (`?page=N`) and static numbered pagination. **Do NOT use Infinite Scroll**. The UI should be minimalist with transparent backgrounds and a red active state.
+- **Movie Card Mobile CSS**: Mobile width restrictions (`width: calc(...)`) are specifically scoped to `.carousel__track .movie-card`. **Do not apply these globally** (it breaks Category Grid posters).
+- **Premium Metadata Hierarchy (`MovieDetail.js`)**: The plot description stands alone. Secondary metadata (Actors, Directors) must be visually subordinated: smaller font (`14px`), dim gray (`#777777`), tight grouping (`gap: 8px`). Do not add large `<h3>` headers for the plot.

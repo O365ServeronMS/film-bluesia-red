@@ -1,7 +1,6 @@
 const API_BASE = 'https://ophim1.com';
 const CACHE_KEY = 'home_data_v4';
 const CACHE_TTL_MS = 30 * 60 * 1000;
-const FETCH_BATCH_SIZE = 3;
 const HERO_COUNT = 5;
 const MAX_CANDIDATES_TO_SCORE = 120;
 
@@ -12,6 +11,31 @@ export default {
 
     if (url.pathname === '/api/home-data') {
       return await handleHomeData(env, ctx);
+    }
+
+    if (url.pathname === '/api/list') {
+      const type = url.searchParams.get('type');
+      const page = url.searchParams.get('page') || '1';
+      if (!type) return badRequest('Missing type');
+      // phim-moi-cap-nhat uses a different OPhim URL format (no /v1/api/ prefix)
+      const upstreamUrl = type === 'phim-moi-cap-nhat'
+        ? `${API_BASE}/danh-sach/phim-moi-cap-nhat?page=${page}`
+        : `${API_BASE}/v1/api/danh-sach/${type}?page=${page}`;
+      return await handleListProxy(request, ctx, upstreamUrl);
+    }
+
+    if (url.pathname === '/api/genre') {
+      const slug = url.searchParams.get('slug');
+      const page = url.searchParams.get('page') || '1';
+      if (!slug) return badRequest('Missing slug');
+      return await handleListProxy(request, ctx, `${API_BASE}/v1/api/the-loai/${slug}?page=${page}`);
+    }
+
+    if (url.pathname === '/api/country') {
+      const slug = url.searchParams.get('slug');
+      const page = url.searchParams.get('page') || '1';
+      if (!slug) return badRequest('Missing slug');
+      return await handleListProxy(request, ctx, `${API_BASE}/v1/api/quoc-gia/${slug}?page=${page}`);
     }
 
     let response = await env.ASSETS.fetch(request);
@@ -39,7 +63,10 @@ async function handleHomeData(env, ctx) {
 
     if (cachedData) {
       if (Date.now() - cachedData.timestamp > CACHE_TTL_MS) {
-        const refresh = fetchFreshData().then(data => data && KV?.put(CACHE_KEY, JSON.stringify(data)));
+        // Bump timestamp before firing background refresh to debounce concurrent triggers
+        const bumped = { ...cachedData, timestamp: Date.now() };
+        await KV?.put(CACHE_KEY, JSON.stringify(bumped), { expirationTtl: 7200 });
+        const refresh = fetchFreshData().then(data => data && KV?.put(CACHE_KEY, JSON.stringify(data), { expirationTtl: 7200 }));
         if (ctx?.waitUntil) ctx.waitUntil(refresh);
       }
       return new Response(JSON.stringify(cachedData), { headers: corsHeaders });
@@ -53,12 +80,55 @@ async function handleHomeData(env, ctx) {
       });
     }
 
-    if (KV) await KV.put(CACHE_KEY, JSON.stringify(freshData));
+    if (KV) await KV.put(CACHE_KEY, JSON.stringify(freshData), { expirationTtl: 7200 });
     return new Response(JSON.stringify(freshData), { headers: corsHeaders });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+function badRequest(message) {
+  return new Response(JSON.stringify({ error: message }), {
+    status: 400,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+async function handleListProxy(request, ctx, upstreamUrl) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Content-Type': 'application/json',
+    'Cache-Control': 'public, s-maxage=1800, max-age=1800',
+  };
+
+  // Cache API: per-PoP CDN cache, zero KV quota consumed
+  const cacheKey = new Request(upstreamUrl);
+  const cached = await caches.default.match(cacheKey);
+  if (cached) {
+    const headers = new Headers(cached.headers);
+    headers.set('Access-Control-Allow-Origin', '*');
+    return new Response(cached.body, { status: 200, headers });
+  }
+
+  try {
+    const res = await fetch(upstreamUrl);
+    if (!res.ok) {
+      return new Response(JSON.stringify({ error: `OPhim upstream error: ${res.status}` }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+    const data = await res.json();
+    const response = new Response(JSON.stringify(data), { headers: corsHeaders });
+    if (ctx?.waitUntil) ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+    return response;
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
   }
 }
@@ -89,7 +159,7 @@ async function fetchFreshData() {
       cinemaPage1,
       cinemaPage2,
       cinemaPage3,
-    ] = await fetchJsonInBatches(urls);
+    ] = await fetchAllJson(urls);
 
     const auMyItems = [auMyPage1, auMyPage2, auMyPage3].flatMap(getItems);
     const cinemaItems = [cinemaPage1, cinemaPage2, cinemaPage3].flatMap(getItems);
@@ -99,9 +169,9 @@ async function fetchFreshData() {
       timestamp: Date.now(),
       heroMovies,
       newMovies: {
-        items: newRes.items || [],
-        pagination: newRes.pagination || {},
-        pathImage: newRes.pathImage || 'https://img.ophim.live/uploads/movies/',
+        items: newRes?.items || [],
+        pagination: newRes?.pagination || {},
+        pathImage: newRes?.pathImage || 'https://img.ophim.live/uploads/movies/',
       },
       phimLe: { items: getItems(leRes) },
       phimBo: { items: getItems(boRes) },
@@ -113,14 +183,13 @@ async function fetchFreshData() {
   }
 }
 
-async function fetchJsonInBatches(urls) {
-  const results = [];
-  for (let i = 0; i < urls.length; i += FETCH_BATCH_SIZE) {
-    const batch = urls.slice(i, i + FETCH_BATCH_SIZE);
-    const batchResults = await Promise.all(batch.map(url => fetch(url).then(res => res.json())));
-    results.push(...batchResults);
-  }
-  return results;
+async function fetchAllJson(urls) {
+  const results = await Promise.allSettled(urls.map(url => fetch(url).then(r => r.json())));
+  return results.map((r, i) => {
+    if (r.status === 'fulfilled') return r.value;
+    console.error(`Failed to fetch ${urls[i]}:`, r.reason);
+    return null; // callers must handle null gracefully
+  });
 }
 
 function getItems(payload) {
