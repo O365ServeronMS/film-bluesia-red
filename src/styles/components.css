@@ -1320,6 +1320,12 @@
   z-index: 3;
 }
 
+/* Thumb layout already provides clean bottom spacing; cancel the negative
+   pull that tucked episodes into the old hero's empty bottom strip. */
+.detail--has-thumb .detail__episodes {
+  margin-top: 0;
+}
+
 .episodes__header {
   display: flex;
   align-items: center;

@@ -140,6 +140,7 @@ export async function renderMovieDetail(container, slug) {
     thumb.loading = 'lazy';
     heroInner.appendChild(thumb);
     banner.classList.add('hero--has-thumb');
+    detail.classList.add('detail--has-thumb');
   }
 
   // Content
