@@ -242,7 +242,15 @@ export function renderHero(container, movies) {
     next.overlay.classList.add('hero__overlay--active');
     next.content.classList.add('hero__content--active');
     railButtons[currentIndex].classList.add('hero__rail-item--active');
-    railButtons[currentIndex].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    // Scroll only within the rail, never the page
+    const btn = railButtons[currentIndex];
+    const railEl = btn.closest('.hero__rail') || btn.parentElement;
+    if (railEl) {
+      const btnTop = btn.offsetTop - railEl.offsetTop;
+      const btnBot = btnTop + btn.offsetHeight;
+      if (btnTop < railEl.scrollTop) railEl.scrollTop = btnTop;
+      else if (btnBot > railEl.scrollTop + railEl.clientHeight) railEl.scrollTop = btnBot - railEl.clientHeight;
+    }
   }
 
   function nextSlide() {
