@@ -1,6 +1,6 @@
-# AI Agent Guidelines for Film Bluesia Red
+# AI Agent Guidelines for Redflare
 
-Welcome, fellow AI agent! You are about to modify the `film-bluesia-red` codebase. Before you write a single line of code, **read this entire document**. 
+Welcome, fellow AI agent! You are about to modify the `redflare` codebase. Before you write a single line of code, **read this entire document**. 
 
 This document merges core AI behavioral principles with the critical context and architectural rules of this specific project. Our goal is to avoid overcomplication, prevent common mistakes, and ensure hard-won premium UI improvements are not accidentally reverted.
 

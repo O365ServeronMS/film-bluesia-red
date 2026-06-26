@@ -1,4 +1,4 @@
-# CLAUDE.md — film-bluesia-red
+# CLAUDE.md — redflare (film-bluesia-red)
 
 This file is self-contained: it carries the shared behavioral guidelines (below)
 plus project-specific guidance (further down). Keep both in sync if the parent
