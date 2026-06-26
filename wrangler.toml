@@ -1,4 +1,4 @@
-name = "phim"
+name = "redflare"
 compatibility_date = "2024-03-20"
 
 # Static-assets-only deployment — no Worker. All catalog data (home/list/genre/
