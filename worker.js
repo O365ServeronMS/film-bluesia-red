@@ -179,8 +179,10 @@ async function handleListProxy(request, ctx, upstreamUrl, env) {
     'Cache-Control': 'public, s-maxage=1800, max-age=1800',
   };
 
-  // Cache API: per-PoP CDN cache, zero KV quota consumed
-  const cacheKey = new Request(upstreamUrl);
+  // Cache API: per-PoP CDN cache, zero KV quota consumed.
+  // __cv namespaces the cache so signed responses don't collide with stale
+  // pre-signing entries; bump it whenever the response shape changes.
+  const cacheKey = new Request(`${upstreamUrl}&__cv=signed1`);
   const cached = await caches.default.match(cacheKey);
   if (cached) {
     const headers = new Headers(cached.headers);
