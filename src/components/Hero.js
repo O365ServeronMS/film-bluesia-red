@@ -1,11 +1,13 @@
 /**
- * Hero banner - auto-rotating top 5 trending movies with crossfade.
+ * Heroslider - auto-rotating top 8 weekly-trending movies with crossfade.
+ * Code name: "Heroslider". Visible label: "Phim Hot Trong Tuần".
  */
 import { posterUrl, thumbUrl } from '../api/ophim.js';
 import { navigate } from '../router.js';
 
 const ROTATE_INTERVAL = 8000;
-const MAX_SLIDES = 5;
+const MAX_SLIDES = 8;
+const SLIDER_TITLE = 'Phim Hot Trong Tuần';
 
 // Desktop (>768px) gets the landscape /d poster_url; mobile gets the portrait
 // /m thumb_url. The variant is baked into the signed URL, so we pick the field
@@ -59,7 +61,7 @@ export function renderHero(container, movies) {
 
   const hero = document.createElement('section');
   hero.className = 'hero';
-  hero.setAttribute('aria-label', 'Top 5 phim thịnh hành');
+  hero.setAttribute('aria-label', SLIDER_TITLE);
 
   const contentElements = [];
   const railButtons = [];
@@ -167,6 +169,16 @@ export function renderHero(container, movies) {
   const rail = document.createElement('div');
   rail.className = 'hero__rail';
 
+  const railHeader = document.createElement('div');
+  railHeader.className = 'hero__rail-header';
+  railHeader.innerHTML = `
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M12 2c.6 3-1.4 4.6-3 6.1S6 11.6 6 14a6 6 0 0012 0c0-2-1-4-2.6-5.6C13.9 7 13.5 4.6 12 2zm0 17a3 3 0 01-3-3c0-1.3.7-2.4 1.7-3 .1 1 .8 1.7 1.6 2 1-.4 1.5-1.3 1.6-2.5.8.9 1.1 1.9 1.1 3.5a3 3 0 01-3 3z"></path>
+    </svg>
+    <span>${SLIDER_TITLE}</span>
+  `;
+  rail.appendChild(railHeader);
+
   slides.forEach((movie, index) => {
     const item = document.createElement('button');
     item.className = 'hero__rail-item';
@@ -230,6 +242,7 @@ export function renderHero(container, movies) {
     next.overlay.classList.add('hero__overlay--active');
     next.content.classList.add('hero__content--active');
     railButtons[currentIndex].classList.add('hero__rail-item--active');
+    railButtons[currentIndex].scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
   function nextSlide() {

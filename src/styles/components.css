@@ -461,19 +461,47 @@
   right: 4%;
   z-index: 3;
   display: grid;
-  gap: 10px;
+  gap: 8px;
   width: min(360px, 31vw);
-  transform: translateY(-43%);
+  max-height: calc(100vh - 132px);
+  overflow-y: auto;
+  transform: translateY(-50%);
+  scrollbar-width: none;
+}
+
+.hero__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.hero__rail-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 2px 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: linear-gradient(to bottom, #000000 0%, rgba(0, 0, 0, 0.85) 55%, rgba(0, 0, 0, 0) 100%);
+}
+
+.hero__rail-header svg {
+  flex: 0 0 auto;
+  color: #e50914;
 }
 
 .hero__rail-item {
   position: relative;
   display: grid;
-  grid-template-columns: 34px 54px minmax(0, 1fr);
+  grid-template-columns: 30px 42px minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  min-height: 78px;
-  padding: 8px 10px;
+  gap: 11px;
+  min-height: 56px;
+  padding: 7px 10px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 4px;
@@ -509,7 +537,7 @@
 
 .hero__rail-rank {
   color: transparent;
-  font-size: 42px;
+  font-size: 34px;
   font-weight: 900;
   line-height: 1;
   -webkit-text-stroke: 1.4px rgba(255, 255, 255, 0.72);
@@ -517,7 +545,7 @@
 
 .hero__rail-poster {
   display: block;
-  width: 54px;
+  width: 42px;
   aspect-ratio: 2 / 3;
   overflow: hidden;
   border-radius: 3px;
@@ -661,6 +689,10 @@
     display: none;
   }
 
+  .hero__rail-header {
+    display: none;
+  }
+
   .hero__rail-item {
     grid-template-columns: 28px 42px;
     gap: 8px;
@@ -769,10 +801,15 @@
     display: grid;
     gap: 4px;
     width: min(350px, 39vw);
-    max-height: calc(100vh - 64px);
-    overflow: visible;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    scrollbar-width: none;
     padding-bottom: 0;
     transform: translateY(-50%);
+  }
+
+  .hero__rail-header {
+    display: none;
   }
 
   .hero__rail-item {
