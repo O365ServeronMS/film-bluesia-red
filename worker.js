@@ -6,6 +6,73 @@ const CACHE_TTL_MS = 30 * 60 * 1000;
 const HERO_COUNT = 5;
 const MAX_CANDIDATES_TO_SCORE = 120;
 
+// --- Image signing (mirrors film-bluesia-cloudflare lib/image-cache.ts) ---
+// URL normalization must match cloudflare project exactly so both projects
+// produce the same hash → same cache file on img.bluesia.net.
+
+const IMAGE_CACHE_BASE = 'https://img.bluesia.net';
+const IMAGE_SIG_VERSION = 'v1';
+
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hmacSha256Hex(secret, text) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Produce the same canonical URL that cloudflare's normalizePosterUrl +
+// validateImageSourceUrl.url.toString() would produce for OPhim images.
+function normalizeOphimImageUrl(raw) {
+  if (!raw) return '';
+  const src = String(raw).trim();
+  if (!src) return '';
+  if (src.startsWith('//')) return `https:${src}`;
+  if (!src.startsWith('http')) {
+    const path = src.replace(/^\/+/, '');
+    return `https://img.ophim.live/uploads/movies/${path}`;
+  }
+  try {
+    return new URL(src).toString();
+  } catch {
+    return src;
+  }
+}
+
+// variant: 'm' (thumbnail/list cards) | 'd' (detail/poster)
+async function signImageUrl(upstreamUrl, variant, secret) {
+  if (!upstreamUrl || !secret) return upstreamUrl || '';
+  try {
+    const hash = await sha256Hex(upstreamUrl);
+    const payload = `${IMAGE_SIG_VERSION}\n${variant}\n${hash}\n${upstreamUrl}`;
+    const sig = await hmacSha256Hex(secret, payload);
+    return `${IMAGE_CACHE_BASE}/i/${variant}/${hash}.webp?url=${encodeURIComponent(upstreamUrl)}&sig=${IMAGE_SIG_VERSION}.${sig}`;
+  } catch {
+    return upstreamUrl;
+  }
+}
+
+async function signItemImages(item, secret) {
+  const thumbRaw = normalizeOphimImageUrl(item.thumb_url || item.poster_url || '');
+  const posterRaw = normalizeOphimImageUrl(item.poster_url || item.thumb_url || '');
+  if (!thumbRaw && !posterRaw) return item;
+  const [thumb_url, poster_url] = await Promise.all([
+    thumbRaw ? signImageUrl(thumbRaw, 'm', secret) : Promise.resolve(''),
+    posterRaw ? signImageUrl(posterRaw, 'd', secret) : Promise.resolve(''),
+  ]);
+  return { ...item, thumb_url, poster_url };
+}
+
+async function signItemsInPayload(items, secret) {
+  return Promise.all((items || []).map(item => signItemImages(item, secret)));
+}
+
 export default {
   async fetch(request, env, ctx) {
     console.log('Worker intercepted:', request.url);
@@ -23,21 +90,27 @@ export default {
       const upstreamUrl = type === 'phim-moi-cap-nhat'
         ? `${API_BASE}/danh-sach/phim-moi-cap-nhat?page=${page}`
         : `${API_BASE}/v1/api/danh-sach/${type}?page=${page}`;
-      return await handleListProxy(request, ctx, upstreamUrl);
+      return await handleListProxy(request, ctx, upstreamUrl, env);
     }
 
     if (url.pathname === '/api/genre') {
       const slug = url.searchParams.get('slug');
       const page = url.searchParams.get('page') || '1';
       if (!slug) return badRequest('Missing slug');
-      return await handleListProxy(request, ctx, `${API_BASE}/v1/api/the-loai/${slug}?page=${page}`);
+      return await handleListProxy(request, ctx, `${API_BASE}/v1/api/the-loai/${slug}?page=${page}`, env);
     }
 
     if (url.pathname === '/api/country') {
       const slug = url.searchParams.get('slug');
       const page = url.searchParams.get('page') || '1';
       if (!slug) return badRequest('Missing slug');
-      return await handleListProxy(request, ctx, `${API_BASE}/v1/api/quoc-gia/${slug}?page=${page}`);
+      return await handleListProxy(request, ctx, `${API_BASE}/v1/api/quoc-gia/${slug}?page=${page}`, env);
+    }
+
+    if (url.pathname.startsWith('/api/movie/')) {
+      const slug = url.pathname.slice('/api/movie/'.length);
+      if (!slug) return badRequest('Missing slug');
+      return await handleMovieDetail(slug, env);
     }
 
     let response = await env.ASSETS.fetch(request);
@@ -99,7 +172,7 @@ function badRequest(message) {
   });
 }
 
-async function handleListProxy(request, ctx, upstreamUrl) {
+async function handleListProxy(request, ctx, upstreamUrl, env) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Content-Type': 'application/json',
@@ -124,6 +197,14 @@ async function handleListProxy(request, ctx, upstreamUrl) {
       });
     }
     const data = await res.json();
+    const secret = env?.IMAGE_CACHE_SIGNING_SECRET || '';
+    // Sign images in-place so client never touches img.ophim.live
+    const d = data.data || data;
+    if (d?.items?.length && secret) {
+      d.items = await signItemsInPayload(d.items, secret);
+      if (data.data) data.data.items = d.items;
+      else data.items = d.items;
+    }
     const response = new Response(JSON.stringify(data), { headers: corsHeaders });
     if (ctx?.waitUntil) ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
     return response;
@@ -131,6 +212,36 @@ async function handleListProxy(request, ctx, upstreamUrl) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+}
+
+async function handleMovieDetail(slug, env) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Content-Type': 'application/json',
+    'Cache-Control': 'public, s-maxage=300, max-age=60',
+  };
+  try {
+    const res = await fetch(`${API_BASE}/phim/${slug}`);
+    if (!res.ok) {
+      return new Response(JSON.stringify({ error: `OPhim upstream error: ${res.status}` }), {
+        status: res.status, headers: corsHeaders,
+      });
+    }
+    const data = await res.json();
+    const secret = env?.IMAGE_CACHE_SIGNING_SECRET || '';
+    const item = data.data?.item || data.item || data.movie || {};
+    if (secret) {
+      const signed = await signItemImages(item, secret);
+      if (data.data?.item) data.data.item = signed;
+      else if (data.item) data.item = signed;
+      else if (data.movie) data.movie = signed;
+    }
+    return new Response(JSON.stringify(data), { headers: corsHeaders });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500, headers: corsHeaders,
     });
   }
 }
@@ -180,18 +291,28 @@ async function fetchFreshData(env) {
       trendingIds
     );
 
+    const secret = env?.IMAGE_CACHE_SIGNING_SECRET || '';
+    const [signedHero, signedNew, signedLe, signedBo, signedHh, signedTrending] = await Promise.all([
+      signItemsInPayload(heroMovies, secret),
+      signItemsInPayload(newRes?.items || [], secret),
+      signItemsInPayload(getItems(leRes), secret),
+      signItemsInPayload(getItems(boRes), secret),
+      signItemsInPayload(getItems(hhRes), secret),
+      signItemsInPayload(trendingItems, secret),
+    ]);
+
     return {
       timestamp: Date.now(),
-      heroMovies,
+      heroMovies: signedHero,
       newMovies: {
-        items: newRes?.items || [],
+        items: signedNew,
         pagination: newRes?.pagination || {},
-        pathImage: newRes?.pathImage || 'https://img.ophim.live/uploads/movies/',
+        pathImage: IMAGE_CACHE_BASE,
       },
-      phimLe: { items: getItems(leRes) },
-      phimBo: { items: getItems(boRes) },
-      hoatHinh: { items: getItems(hhRes) },
-      trending: { items: trendingItems },
+      phimLe: { items: signedLe },
+      phimBo: { items: signedBo },
+      hoatHinh: { items: signedHh },
+      trending: { items: signedTrending },
     };
   } catch (err) {
     console.error('Error fetching fresh data:', err);

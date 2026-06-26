@@ -10,6 +10,11 @@ binding = "ASSETS"
 binding = "MOVIES_KV"
 id = "10670a45ffa54b21bbb40cecc47ae1c5"
 
+[vars]
+IMAGE_CACHE_BASE = "https://img.bluesia.net"
+# IMAGE_CACHE_SIGNING_SECRET → set via: npx wrangler secret put IMAGE_CACHE_SIGNING_SECRET
+# or put in .dev.vars for local dev (never commit .dev.vars)
+
 [observability.logs]
 enabled = false
 invocation_logs = true

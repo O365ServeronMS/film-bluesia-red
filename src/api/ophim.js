@@ -1,11 +1,11 @@
 /**
  * OPhim API Client
  * Base: https://ophim1.com
- * Image CDN: https://img.ophim.live/uploads/movies/
+ * Images: signed URLs via https://img.bluesia.net (signed by Worker)
  */
 
 const API_BASE = 'https://ophim1.com';
-const IMG_CDN = 'https://img.ophim.live/uploads/movies/';
+const IMAGE_CACHE_BASE = 'https://img.bluesia.net';
 
 // Simple in-memory cache with TTL (5 minutes)
 const cache = new Map();
@@ -43,7 +43,7 @@ export async function getNewMovies(page = 1) {
   return {
     items: data.items || [],
     pagination: data.pagination || {},
-    pathImage: data.pathImage || IMG_CDN,
+    pathImage: IMAGE_CACHE_BASE,
   };
 }
 
@@ -71,12 +71,13 @@ export async function getMoviesByType(type, page = 1) {
  * @returns {Promise<Object>}
  */
 export async function getMovieDetail(slug) {
-  const data = await fetchJson(`${API_BASE}/phim/${slug}`);
+  // Route through Worker so images are signed before reaching the client
+  const data = await fetchJson(`/api/movie/${slug}`);
   const item = data.data?.item || data.item || data.movie || {};
   return {
     ...item,
     episodes: item.episodes || data.episodes || data.data?.episodes || [],
-    cdnImage: data.data?.APP_DOMAIN_CDN_IMAGE || data.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live',
+    cdnImage: IMAGE_CACHE_BASE,
   };
 }
 
@@ -144,17 +145,15 @@ export async function getMoviesByCountry(countrySlug, page = 1) {
 }
 
 // --- Image URL helpers ---
+// Worker signs all image URLs before they reach the client.
+// These functions are now pass-throughs — URLs are always full https:// signed URLs.
 
 export function posterUrl(path) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return IMG_CDN + path;
+  return path || '';
 }
 
 export function thumbUrl(path) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return IMG_CDN + path;
+  return path || '';
 }
 
 // --- Normalize list item ---
@@ -183,4 +182,4 @@ export function normalizeListItem(item) {
   };
 }
 
-export { API_BASE, IMG_CDN };
+export { API_BASE, IMAGE_CACHE_BASE };
