@@ -6,6 +6,10 @@
 
 const API_BASE = 'https://ophim1.com';
 const IMAGE_CACHE_BASE = 'https://img.bluesia.net';
+// Catalog data (list/genre/country/detail) is fetched from the VPS catalog-api,
+// which signs image URLs and caches in Valkey — keeping the phim Worker out of
+// the per-request path. Home-data still comes from the Worker (see main.js).
+const CATALOG_BASE = IMAGE_CACHE_BASE;
 
 // Simple in-memory cache with TTL (5 minutes)
 const cache = new Map();
@@ -39,7 +43,7 @@ async function fetchJson(url) {
  * @returns {Promise<{items: Array, pagination: Object}>}
  */
 export async function getNewMovies(page = 1) {
-  const data = await fetchJson(`/api/list?type=phim-moi-cap-nhat&page=${page}`);
+  const data = await fetchJson(`${CATALOG_BASE}/api/list?type=phim-moi-cap-nhat&page=${page}`);
   return {
     items: data.items || [],
     pagination: data.pagination || {},
@@ -54,7 +58,7 @@ export async function getNewMovies(page = 1) {
  * @returns {Promise<{items: Array, pagination: Object, titlePage: string}>}
  */
 export async function getMoviesByType(type, page = 1) {
-  const data = await fetchJson(`/api/list?type=${type}&page=${page}`);
+  const data = await fetchJson(`${CATALOG_BASE}/api/list?type=${type}&page=${page}`);
   const d = data.data || data;
   return {
     items: (d.items || []).map(normalizeListItem),
@@ -71,8 +75,8 @@ export async function getMoviesByType(type, page = 1) {
  * @returns {Promise<Object>}
  */
 export async function getMovieDetail(slug) {
-  // Route through Worker so images are signed before reaching the client
-  const data = await fetchJson(`/api/movie/${slug}`);
+  // Route through catalog-api (VPS) so images are signed before reaching the client
+  const data = await fetchJson(`${CATALOG_BASE}/api/movie/${slug}`);
   const item = data.data?.item || data.item || data.movie || {};
   return {
     ...item,
@@ -120,7 +124,7 @@ export async function getCountries() {
  * Get movies by genre slug
  */
 export async function getMoviesByGenre(genreSlug, page = 1) {
-  const data = await fetchJson(`/api/genre?slug=${genreSlug}&page=${page}`);
+  const data = await fetchJson(`${CATALOG_BASE}/api/genre?slug=${genreSlug}&page=${page}`);
   const d = data.data || data;
   return {
     items: (d.items || []).map(normalizeListItem),
@@ -134,7 +138,7 @@ export async function getMoviesByGenre(genreSlug, page = 1) {
  * Get movies by country slug
  */
 export async function getMoviesByCountry(countrySlug, page = 1) {
-  const data = await fetchJson(`/api/country?slug=${countrySlug}&page=${page}`);
+  const data = await fetchJson(`${CATALOG_BASE}/api/country?slug=${countrySlug}&page=${page}`);
   const d = data.data || data;
   return {
     items: (d.items || []).map(normalizeListItem),
