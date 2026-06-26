@@ -7,8 +7,15 @@ import { navigate } from '../router.js';
 const ROTATE_INTERVAL = 8000;
 const MAX_SLIDES = 5;
 
+// Desktop (>768px) gets the landscape /d poster_url; mobile gets the portrait
+// /m thumb_url. The variant is baked into the signed URL, so we pick the field
+// by viewport rather than rewriting the path.
+const DESKTOP_MQ = window.matchMedia('(min-width: 769px)');
+
 function getBackdropUrl(movie) {
-  return thumbUrl(movie.thumb_url || movie.poster_url);
+  return DESKTOP_MQ.matches
+    ? posterUrl(movie.poster_url || movie.thumb_url)
+    : thumbUrl(movie.thumb_url || movie.poster_url);
 }
 
 function getPosterUrl(movie) {
@@ -234,10 +241,19 @@ export function renderHero(container, movies) {
     intervalId = setInterval(nextSlide, ROTATE_INTERVAL);
   }
 
+  // Swap each backdrop to the correct variant when crossing the breakpoint.
+  function applyBackdrops() {
+    contentElements.forEach((el, i) => {
+      el.backdrop.style.backgroundImage = `url(${getBackdropUrl(slides[i])})`;
+    });
+  }
+  DESKTOP_MQ.addEventListener('change', applyBackdrops);
+
   intervalId = setInterval(nextSlide, ROTATE_INTERVAL);
   container.appendChild(hero);
 
   return function cleanup() {
     clearInterval(intervalId);
+    DESKTOP_MQ.removeEventListener('change', applyBackdrops);
   };
 }
