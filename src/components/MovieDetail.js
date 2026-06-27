@@ -94,7 +94,7 @@ async function renderRelated(container, movie) {
   const tmdbId = movie.tmdb?.id;
   if (!tmdbId) return;
 
-  const items = await getRelatedMovies(tmdbId).catch(() => []);
+  const items = await getRelatedMovies(tmdbId, movie.tmdb?.type).catch(() => []);
   if (!items.length) return;
 
   renderCarousel(container, {
