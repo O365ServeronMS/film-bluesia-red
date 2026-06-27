@@ -101,7 +101,7 @@ export async function getMovieDetail(slug) {
  */
 export async function searchMovies(keyword, page = 1) {
   const data = await fetchJson(
-    `${API_BASE}/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&page=${page}`
+    `${CATALOG_BASE}/api/search?keyword=${encodeURIComponent(keyword)}&page=${page}`
   );
   const d = data.data || data;
   return {
