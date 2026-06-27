@@ -128,12 +128,6 @@ export function renderHeroSlider(container, movies) {
 
     content.appendChild(meta);
 
-    const desc = document.createElement('p');
-    desc.className = 'hero__description';
-    const descText = [movie.name, movie.origin_name].filter(Boolean).join(' - ');
-    desc.textContent = descText.length > 150 ? `${descText.slice(0, 147)}...` : descText;
-    content.appendChild(desc);
-
     const btnGroup = document.createElement('div');
     btnGroup.className = 'hero__buttons';
 
