@@ -4,3 +4,11 @@ dist/
 .env
 .dev.vars
 .DS_Store
+
+# AI assistant context / memory — kept local, not in the repo
+CLAUDE.md
+CLAUDE.local.md
+agents.md
+AGENTS.md
+.claude/
+**/memory/
