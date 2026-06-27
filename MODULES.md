@@ -23,14 +23,16 @@ feature in one shot.
 |---|---|
 | UI component | `src/modules/Recommendation/Recommendation.js` |
 | CSS | *(none yet — reuses `Carousel` styles; add `Recommendation.css` when it diverges)* |
-| API client | `getRelatedMovies()` in `src/api/ophim.js` |
-| Backend route | `GET /api/related/:type/:id` (catalog-api `server.js`) |
-| Backend logic | `fetchTmdbRecommendations` / `matchOphimByTmdb` in `server.js` |
+| API client | `getRecommendation()` in `src/api/ophim.js` |
+| Backend route | `GET /api/recommendation/:type/:id` (catalog-api `recommendation.js`) |
+| Backend logic | `createRecommendation()` factory in `recommendation.js` |
 | Cache namespace | `catalog:c1:related:*` + reverse index `catalog:c1:idx:*` (Valkey, VPS) |
 
-> The route/cache still use the legacy word `related`. When convenient, migrate to
-> `/api/recommendation` + `catalog:c1:recommendation:*` using the **add-alias →
-> switch → retire** pattern (never a big-bang rename — FE+BE deploy separately).
+> Done via the **add-alias → switch → retire** pattern: the backend still serves
+> the legacy `GET /api/related/:type/:id` (and `/api/related/:id`) as aliases so
+> already-cached client bundles keep working; the FE now calls `/api/recommendation`.
+> The **cache keys** stay `catalog:c1:related:*` on purpose — renaming them would
+> orphan the warm 30-day cache for no user benefit.
 
 ## Module catalog
 
@@ -68,10 +70,15 @@ list) — that branch is where `Single` vs `Series` behaviour lives.
 | Module | Endpoint | Source |
 |---|---|---|
 | `HomeData` | `/api/home-data` | `home.js` |
-| `Catalog` | `/api/list`, `/api/genre`, `/api/country` | `server.js` *(to split out)* |
-| `Detail` | `/api/movie` | `server.js` *(to split out)* |
-| `Recommendation` | `/api/related` (→ `/api/recommendation`) | `server.js` *(to split out)* |
+| `Catalog` | `/api/list`, `/api/genre`, `/api/country` | `server.js` *(thin route wrappers; left inline)* |
+| `Detail` | `/api/movie` | `server.js` *(thin route wrapper; left inline)* |
+| `Recommendation` | `/api/recommendation` (+ legacy `/api/related` alias) | ✅ `recommendation.js` |
 | `ImageSign` | *(internal)* | `sign.js` |
+
+`recommendation.js` exports a `createRecommendation({ redis, fetchOphimJson, API_BASE, CACHE_NS })`
+factory — `server.js` owns the shared infra and wires it in. `Catalog`/`Detail`
+stayed inline in `server.js` on purpose: they are one-line handlers over the shared
+`cached()` helper, so extracting them adds indirection without real isolation.
 
 ## Folder layout (frontend, target)
 
@@ -93,9 +100,9 @@ touches a single directory — important given the CSS-specificity gotchas in
 
 - [x] `Recommendation` extracted from `MovieDetail.js` → `modules/Recommendation/` (pattern proof)
 - [x] Move all Section modules `components/*` → `modules/<Name>/` + rename files & exports to convention
+- [x] Extract `Recommendation` service module from `catalog-api/server.js` → `recommendation.js` + add canonical `/api/recommendation` (FE switched; `/api/related` kept as alias)
 - [ ] Extract page functions from `main.js` → `pages/` (this also moves the last resident, `components/MovieDetail.js`, → `pages/DetailPage.js`)
 - [ ] Split monolithic `styles/components.css` per module (co-locate) — higher risk (CSS specificity / source order)
-- [ ] Split `catalog-api/server.js` into service modules + add `/api/recommendation` alias
 
 > `components/MovieDetail.js` intentionally stays put for now — it is page-level
 > (the detail page), so it migrates with the `pages/` step, not the Section move.

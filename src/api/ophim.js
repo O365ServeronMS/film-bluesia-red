@@ -157,7 +157,7 @@ export async function getMoviesByCountry(countrySlug, page = 1) {
 }
 
 /**
- * Get related movies ("Bạn cũng có thể thích") for a TMDB title.
+ * Get recommendations ("Bạn cũng có thể thích") for a TMDB title.
  * Resolved + cached 30 days on the VPS via TMDB recommendations.
  * Media type matters: TMDB ids are not unique across movie/tv, so the VPS must
  * know which endpoint (/movie or /tv) to query.
@@ -165,10 +165,10 @@ export async function getMoviesByCountry(countrySlug, page = 1) {
  * @param {string} [type] OPhim tmdb.type — 'tv' or 'movie' (default)
  * @returns {Promise<Array>}
  */
-export async function getRelatedMovies(tmdbId, type = 'movie') {
+export async function getRecommendation(tmdbId, type = 'movie') {
   if (!tmdbId) return [];
   const mediaType = type === 'tv' ? 'tv' : 'movie';
-  const data = await fetchJson(`${CATALOG_BASE}/api/related/${mediaType}/${tmdbId}`);
+  const data = await fetchJson(`${CATALOG_BASE}/api/recommendation/${mediaType}/${tmdbId}`);
   return (data.items || []).map(normalizeListItem);
 }
 
