@@ -36,6 +36,14 @@ function getScore(movie) {
   return score.toFixed(1);
 }
 
+// TMDB rating is what we display site-wide; getScore (imdb) is retained for the
+// catalog ranking algorithm (OPhim's imdb data is too sparse to show).
+function getTmdbScore(movie) {
+  const score = Number(movie.vote_average);
+  if (!Number.isFinite(score) || score <= 0) return '';
+  return score.toFixed(1);
+}
+
 function chevronIcon(direction) {
   const path = direction === 'left' ? 'M15 18l-6-6 6-6' : 'M9 6l6 6-6 6';
 
@@ -104,11 +112,11 @@ export function renderHeroSlider(container, movies) {
       meta.appendChild(year);
     }
 
-    const score = getScore(movie);
+    const score = getTmdbScore(movie);
     if (score) {
       const rating = document.createElement('span');
       rating.className = 'hero__rating';
-      rating.innerHTML = `<span>IMDb</span> ${score}`;
+      rating.innerHTML = `<span>TMDB</span> ${score}`;
       meta.appendChild(rating);
     }
 
@@ -178,7 +186,7 @@ export function renderHeroSlider(container, movies) {
     item.className = 'hero__rail-item';
     if (index === 0) item.classList.add('hero__rail-item--active');
     item.setAttribute('aria-label', `Chọn phim thứ ${index + 1}: ${movie.name}`);
-    const score = getScore(movie);
+    const score = getTmdbScore(movie);
     item.innerHTML = `
       <span class="hero__rail-rank">${index + 1}</span>
       <span class="hero__rail-poster">
@@ -186,7 +194,7 @@ export function renderHeroSlider(container, movies) {
       </span>
       <span class="hero__rail-copy">
         <span class="hero__rail-title">${movie.name}</span>
-        ${score ? `<span class="hero__rail-score"><span>IMDb</span> ${score}</span>` : ''}
+        ${score ? `<span class="hero__rail-score"><span>TMDB</span> ${score}</span>` : ''}
       </span>
     `;
     item.addEventListener('click', () => {

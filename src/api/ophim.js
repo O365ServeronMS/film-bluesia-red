@@ -206,6 +206,7 @@ export function normalizeListItem(item) {
     country: item.country || [],
     tmdb: item.tmdb || {},
     imdb: item.imdb || {},
+    vote_average: item.vote_average,
     modified: item.modified || {},
   };
 }

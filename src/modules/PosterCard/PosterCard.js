@@ -23,6 +23,14 @@ function getImdbScore(movie) {
   return score.toFixed(1);
 }
 
+// TMDB rating is what we display site-wide; getImdbScore is retained above for
+// the catalog ranking algorithm (OPhim's imdb data is too sparse to show).
+function getTmdbScore(movie) {
+  const score = Number(movie.vote_average);
+  if (!Number.isFinite(score) || score <= 0) return '';
+  return score.toFixed(1);
+}
+
 /**
  * Render a single movie card into the given container.
  * @param {HTMLElement} container
@@ -100,23 +108,25 @@ export function renderPosterCard(container, movie, rank = null) {
     overlayYear.className = 'movie-card__year';
     overlayYear.textContent = movie.year;
     overlayMeta.appendChild(overlayYear);
-
-    const separator = document.createElement('span');
-    separator.className = 'movie-card__meta-separator';
-    separator.textContent = '·';
-    overlayMeta.appendChild(separator);
   }
 
-  const imdb = document.createElement('span');
-  imdb.className = 'movie-card__imdb';
-  imdb.textContent = 'IMDb';
-  overlayMeta.appendChild(imdb);
+  const tmdbScore = getTmdbScore(movie);
+  if (tmdbScore) {
+    if (movie.year) {
+      const separator = document.createElement('span');
+      separator.className = 'movie-card__meta-separator';
+      separator.textContent = '·';
+      overlayMeta.appendChild(separator);
+    }
 
-  const imdbScore = getImdbScore(movie);
-  if (imdbScore) {
+    const tmdb = document.createElement('span');
+    tmdb.className = 'movie-card__tmdb';
+    tmdb.textContent = 'TMDB';
+    overlayMeta.appendChild(tmdb);
+
     const score = document.createElement('span');
-    score.className = 'movie-card__imdb-score';
-    score.textContent = imdbScore;
+    score.className = 'movie-card__tmdb-score';
+    score.textContent = tmdbScore;
     overlayMeta.appendChild(score);
   }
 

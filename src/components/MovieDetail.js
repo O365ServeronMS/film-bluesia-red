@@ -175,7 +175,7 @@ export async function renderMovieDetail(container, slug) {
   if (movie.vote_average) {
     const rating = document.createElement('span');
     rating.className = 'hero__badge hero__badge--rating';
-    rating.textContent = `★ ${movie.vote_average}`;
+    rating.textContent = `TMDB ${movie.vote_average}`;
     meta.appendChild(rating);
   }
 

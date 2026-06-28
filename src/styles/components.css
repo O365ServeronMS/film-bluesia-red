@@ -379,9 +379,15 @@
   color: #ffffff;
 }
 
+/* TMDB rating — luxury gold, shown site-wide (IMDb display retired). */
 .hero__rating span {
-  color: #e50914;
+  color: #d4af37;
   font-weight: 900;
+}
+
+.hero__rail-score span {
+  color: #d4af37;
+  font-weight: 800;
 }
 
 .hero__badge {
@@ -398,8 +404,9 @@
 }
 
 .hero__badge--rating {
-  background: rgba(245, 197, 24, 0.18);
-  color: #f5c518;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.22), rgba(212, 175, 55, 0.08));
+  color: #e8cd7a;
+  border: 1px solid rgba(212, 175, 55, 0.5);
 }
 
 .hero__buttons {
@@ -1029,6 +1036,16 @@
 
 .movie-card__imdb-score {
   color: #ffffff;
+}
+
+/* TMDB rating badge — luxury gold (replaces the IMDb display on cards). */
+.movie-card__tmdb {
+  color: #d4af37;
+  font-weight: 700;
+}
+
+.movie-card__tmdb-score {
+  color: #f0d98a;
 }
 
 .movie-card__quality {
