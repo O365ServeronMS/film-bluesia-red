@@ -110,6 +110,13 @@ export function renderFooter(container) {
   copyright.textContent = '© 2024 Film Bluesia. All rights reserved.';
   bottomBar.appendChild(copyright);
 
+  // TMDB attribution — required by the TMDB API terms of use.
+  const attribution = document.createElement('p');
+  attribution.className = 'footer__attribution';
+  attribution.textContent =
+    'This product uses the TMDB API but is not endorsed or certified by TMDB.';
+  bottomBar.appendChild(attribution);
+
   footer.appendChild(bottomBar);
 
   container.appendChild(footer);

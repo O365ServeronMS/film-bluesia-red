@@ -172,6 +172,13 @@ export async function renderMovieDetail(container, slug) {
     meta.appendChild(year);
   }
 
+  if (movie.vote_average) {
+    const rating = document.createElement('span');
+    rating.className = 'hero__badge hero__badge--rating';
+    rating.textContent = `★ ${movie.vote_average}`;
+    meta.appendChild(rating);
+  }
+
   if (movie.quality) {
     const quality = document.createElement('span');
     quality.className = 'hero__badge hero__badge--quality';
@@ -301,24 +308,6 @@ export async function renderMovieDetail(container, slug) {
     castRow.appendChild(castValue);
 
     metadataGroup.appendChild(castRow);
-  }
-
-  // ---- Director ----
-  if (Array.isArray(movie.director) && movie.director.length > 0) {
-    const dirRow = document.createElement('div');
-    dirRow.className = 'detail__crew';
-
-    const dirLabel = document.createElement('span');
-    dirLabel.className = 'detail__crew-label';
-    dirLabel.textContent = 'Đạo diễn: ';
-    dirRow.appendChild(dirLabel);
-
-    const dirValue = document.createElement('span');
-    dirValue.className = 'detail__crew-value';
-    dirValue.textContent = movie.director.join(', ');
-    dirRow.appendChild(dirValue);
-
-    metadataGroup.appendChild(dirRow);
   }
 
   if (metadataGroup.hasChildNodes()) {
