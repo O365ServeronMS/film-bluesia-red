@@ -1,10 +1,18 @@
 name = "redflare"
 compatibility_date = "2024-03-20"
+workers_dev = false
+preview_urls = false
 
-# Static-assets-only deployment — no Worker. All catalog data (home/list/genre/
-# country/detail) is served by the VPS catalog-api at img.bluesia.net/api/*.
+# Pin the custom domain in config so each deploy re-attaches it — avoids the site
+# going down when the Git integration is disconnected/reconnected.
+routes = [
+  { pattern = "phim.bluesia.net", custom_domain = true },
+]
+
+# Static-assets-only deployment — no Worker code. All catalog data (home/list/
+# genre/country/detail) is served by the VPS catalog-api at img.bluesia.net/api/*.
 # The asset layer serves the SPA shell and falls back to index.html for client
-# routes, so phim.bluesia.net never invokes a Worker.
+# routes, so phim.bluesia.net never invokes Worker code.
 [assets]
 directory = "dist"
 not_found_handling = "single-page-application"
